@@ -1,0 +1,32 @@
+{
+  "name": "jira-cli-agent-tools",
+  "version": "1.0.0",
+  "description": "Bun implementation of Jira CLI tools (called by wrapper scripts)",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "search": "bun run src/jira-search.ts",
+    "get-ticket": "bun run src/jira-get-ticket.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/parser": "^8.45.0",
+    "eslint": "^9.36.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "marked": "^16.3.0"
+  }
+}
