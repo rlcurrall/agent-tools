@@ -3,9 +3,9 @@
 # Jira Search Script - Wrapper for Bun implementation
 # This script calls the Bun-based implementation in agent-tools/
 
-# Get script directory
+# Get script directory and navigate to parent (agent-tools root)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-AGENT_TOOLS_DIR="$SCRIPT_DIR/agent-tools"
+AGENT_TOOLS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Check if agent-tools directory exists
 if [ ! -d "$AGENT_TOOLS_DIR" ]; then

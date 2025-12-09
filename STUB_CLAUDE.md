@@ -65,6 +65,17 @@ Implement OAuth 2.0 authentication
 jira-set-description.sh PROJ-123 -f description.md
 ```
 
+**Important:** `jira-set-description` completely REPLACES the existing description. To preserve existing content:
+```bash
+# 1. Get current description first
+jira-get-ticket.sh PROJ-123 > current-description.txt
+
+# 2. Edit the description as needed
+
+# 3. Update with new content
+jira-set-description.sh PROJ-123 -f new-description.md
+```
+
 ### Add Comments
 ```bash
 # Simple comment
@@ -244,6 +255,55 @@ ETA: End of sprint
 
 cc: @team"
 done
+```
+
+### Bulk Update Ticket Descriptions
+```bash
+# Standardize descriptions for tickets missing proper formatting
+TICKETS=$(jira-search.sh "project = MYPROJ AND description IS NOT EMPTY" 50 | grep -E '^\[' | cut -d']' -f1 | cut -d'[' -f2)
+
+for ticket in $TICKETS; do
+    # Get current ticket details
+    DETAILS=$(jira-get-ticket.sh "$ticket")
+
+    # Extract and reformat description (AI can process and enhance here)
+    # Then update with standardized format
+    jira-set-description.sh "$ticket" "# Ticket: $ticket
+
+## Description
+[Enhanced description here]
+
+## Acceptance Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+
+## Technical Notes
+[Technical details here]"
+
+    echo "Updated $ticket"
+done
+```
+
+### Update Descriptions from PR Information
+```bash
+# Update ticket description with PR details after merge
+PR_ID="24094"
+TICKET_KEY="PROJ-123"
+
+# Get PR comments and details
+PR_INFO=$(ado-get-pr-comments.sh "$PR_ID" --format markdown)
+
+# Update ticket with implementation details
+jira-set-description.sh "$TICKET_KEY" "# Implementation Complete
+
+## Changes Made
+$(echo "$PR_INFO" | grep -A 5 "Changes")
+
+## PR Review
+Completed in PR #$PR_ID
+
+## Testing
+All tests passing, code reviewed and approved."
 ```
 
 ### Extract and Analyze Comments for AI Processing
