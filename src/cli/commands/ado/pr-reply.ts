@@ -117,7 +117,9 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
       if (validation.valid) {
         prId = validation.value;
       } else {
-        console.error('Error: Invalid PR ID. Must be a positive integer.');
+        console.error(
+          `Error: Could not parse '${argv.prIdOrUrl}' as a PR ID. Expected a positive number or full PR URL.`
+        );
         process.exit(1);
       }
     }
@@ -239,11 +241,13 @@ export const prReplyCommand: CommandModule<object, PrReplyArgv> = {
       type: 'string',
       describe:
         'PR ID or full PR URL (auto-detected from current branch if omitted)',
+      coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
     },
     replyText: {
       type: 'string',
       describe: 'The reply text content',
       demandOption: true,
+      coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
     },
     thread: {
       type: 'number',

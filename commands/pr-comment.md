@@ -16,7 +16,7 @@ Post a comment on an Azure DevOps pull request thread.
 Run the following command with the provided arguments:
 
 ```bash
-aide ado pr comment $ARGUMENTS
+aide ado comment $ARGUMENTS
 ```
 
 ## Flags
@@ -48,8 +48,8 @@ Use comments to:
 
 ```bash
 # General PR comment
-aide ado pr comment 24094 "Ready for re-review after addressing all feedback"
+aide ado comment 24094 "Ready for re-review after addressing all feedback"
 
 # Comment on specific line
-aide ado pr comment 24094 "Added null check as suggested" --file src/utils/helpers.ts --line 127
+aide ado comment 24094 "Added null check as suggested" --file src/utils/helpers.ts --line 127
 ```

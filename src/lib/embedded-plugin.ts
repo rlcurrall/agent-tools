@@ -24,12 +24,18 @@ import * as fs from 'node:fs/promises';
 import pluginJson from '../../.claude-plugin/plugin.json' with { type: 'file' };
 import marketplaceJson from '../../.claude-plugin/marketplace.json' with { type: 'file' };
 
-// Command definition files
+// Command definition files - Jira
 import ticketMd from '../../commands/ticket.md' with { type: 'file' };
-import searchMd from '../../commands/search.md' with { type: 'file' };
-import commentMd from '../../commands/comment.md' with { type: 'file' };
-import updateMd from '../../commands/update.md' with { type: 'file' };
-import prMd from '../../commands/pr.md' with { type: 'file' };
+import ticketSearchMd from '../../commands/ticket-search.md' with { type: 'file' };
+import ticketCommentMd from '../../commands/ticket-comment.md' with { type: 'file' };
+import ticketUpdateMd from '../../commands/ticket-update.md' with { type: 'file' };
+
+// Command definition files - Azure DevOps
+import prCommentMd from '../../commands/pr-comment.md' with { type: 'file' };
+import prCommentsMd from '../../commands/pr-comments.md' with { type: 'file' };
+import prCreateMd from '../../commands/pr-create.md' with { type: 'file' };
+import prReplyMd from '../../commands/pr-reply.md' with { type: 'file' };
+import prUpdateMd from '../../commands/pr-update.md' with { type: 'file' };
 
 // Skill definition files
 import aideSkillMd from '../../skills/aide/SKILL.md' with { type: 'file' };
@@ -63,12 +69,18 @@ export const embeddedPluginFiles: EmbeddedFile[] = [
     sourcePath: marketplaceJson as unknown as string,
   },
 
-  // Command definitions
+  // Command definitions - Jira
   { targetPath: 'commands/ticket.md', sourcePath: ticketMd },
-  { targetPath: 'commands/search.md', sourcePath: searchMd },
-  { targetPath: 'commands/comment.md', sourcePath: commentMd },
-  { targetPath: 'commands/update.md', sourcePath: updateMd },
-  { targetPath: 'commands/pr.md', sourcePath: prMd },
+  { targetPath: 'commands/ticket-search.md', sourcePath: ticketSearchMd },
+  { targetPath: 'commands/ticket-comment.md', sourcePath: ticketCommentMd },
+  { targetPath: 'commands/ticket-update.md', sourcePath: ticketUpdateMd },
+
+  // Command definitions - Azure DevOps
+  { targetPath: 'commands/pr-comment.md', sourcePath: prCommentMd },
+  { targetPath: 'commands/pr-comments.md', sourcePath: prCommentsMd },
+  { targetPath: 'commands/pr-create.md', sourcePath: prCreateMd },
+  { targetPath: 'commands/pr-reply.md', sourcePath: prReplyMd },
+  { targetPath: 'commands/pr-update.md', sourcePath: prUpdateMd },
 
   // Skill definitions
   { targetPath: 'skills/aide/SKILL.md', sourcePath: aideSkillMd },

@@ -171,9 +171,10 @@ export async function findPRByCurrentBranch(
     const config = loadAzureDevOpsConfig();
     const client = new AzureDevOpsClient(config);
 
-    // Query for PRs with this source branch
+    // Query for PRs with this source branch - search all statuses to find abandoned PRs too
     const response = await client.listPullRequests(project, repo, {
       sourceRefName,
+      status: 'all',
     });
 
     const prs = response.value;

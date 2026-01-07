@@ -13,6 +13,7 @@ import { VERSION, CLI_NAME } from './help.js';
 import { jiraCommands } from './commands/jira/index.js';
 import { adoCommands } from './commands/ado/index.js';
 import { pluginCommands } from './commands/plugin/index.js';
+import { primeCommand } from './commands/prime.js';
 
 async function main(): Promise<number> {
   try {
@@ -25,7 +26,8 @@ async function main(): Promise<number> {
       .command(jiraCommands)
       .command(adoCommands)
       .command(pluginCommands)
-      .demandCommand(1, 'Please specify a service (jira, ado, plugin)')
+      .command(primeCommand)
+      .demandCommand(1, 'Please specify a command (jira, ado, plugin, prime)')
       .strict()
       .wrap(Math.min(100, process.stdout.columns || 80))
       .fail((msg, err) => {

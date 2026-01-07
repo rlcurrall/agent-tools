@@ -20,7 +20,7 @@ Update an existing pull request in Azure DevOps.
 Run the following command with the provided arguments:
 
 ```bash
-aide ado pr update $ARGUMENTS
+aide ado update $ARGUMENTS
 ```
 
 ## Flags

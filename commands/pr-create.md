@@ -18,7 +18,7 @@ Create a new pull request in Azure DevOps from the current branch.
 Run the following command with the provided arguments:
 
 ```bash
-aide ado pr create $ARGUMENTS
+aide ado create $ARGUMENTS
 ```
 
 ## Flags

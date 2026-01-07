@@ -16,7 +16,7 @@ Reply to an existing comment thread on an Azure DevOps pull request.
 Run the following command with the provided arguments:
 
 ```bash
-aide ado pr reply $ARGUMENTS
+aide ado reply $ARGUMENTS
 ```
 
 ## Flags
@@ -48,13 +48,13 @@ Use replies to:
 
 ```bash
 # Reply to a thread
-aide ado pr reply 24094 --thread 156 "Fixed as suggested in the latest commit"
+aide ado reply 24094 --thread 156 "Fixed as suggested in the latest commit"
 
 # Reply to specific comment in a thread
-aide ado pr reply 24094 --thread 156 --parent 789 "Good point, I've updated the implementation"
+aide ado reply 24094 --thread 156 --parent 789 "Good point, I've updated the implementation"
 
 # Auto-detect PR from current branch
-aide ado pr reply --thread 156 "Done, please re-review"
+aide ado reply --thread 156 "Done, please re-review"
 ```
 
 ## Finding Thread IDs

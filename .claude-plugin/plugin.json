@@ -1,9 +1,22 @@
 {
   "name": "aide",
-  "version": "1.0.0",
+  "version": "1.1.0-alpha",
   "description": "AI agent integration with Jira and Azure DevOps",
   "author": {
     "name": "Robb Currall"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "aide prime"
+          }
+        ]
+      }
+    ]
+  }
 }

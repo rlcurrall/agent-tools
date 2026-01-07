@@ -176,7 +176,9 @@ async function handler(argv: ArgumentsCamelCase<PrUpdateArgv>): Promise<void> {
       if (validation.valid) {
         prId = validation.value;
       } else {
-        console.error('Error: Invalid PR ID.');
+        console.error(
+          `Error: Could not parse '${argv.prIdOrUrl}' as a PR ID. Expected a positive number or full PR URL.`
+        );
         process.exit(1);
       }
     }

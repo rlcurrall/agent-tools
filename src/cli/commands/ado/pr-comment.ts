@@ -152,7 +152,9 @@ async function handler(argv: ArgumentsCamelCase<PrCommentArgv>): Promise<void> {
       if (validation.valid) {
         prId = validation.value;
       } else {
-        console.error('Error: Invalid PR ID.');
+        console.error(
+          `Error: Could not parse '${argv.prIdOrUrl}' as a PR ID. Expected a positive number or full PR URL.`
+        );
         process.exit(1);
       }
     }
@@ -260,11 +262,13 @@ export const prCommentCommand: CommandModule<object, PrCommentArgv> = {
       type: 'string',
       describe:
         'PR ID or full PR URL (auto-detected from current branch if omitted)',
+      coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
     },
     comment: {
       type: 'string',
       demandOption: true,
       describe: 'Comment text to post',
+      coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
     },
     project: {
       type: 'string',
