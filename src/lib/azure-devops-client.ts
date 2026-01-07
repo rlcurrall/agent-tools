@@ -2,6 +2,7 @@ import type {
   AzureDevOpsConfig,
   AzureDevOpsPRThread,
   AzureDevOpsPullRequest,
+  AdoFlattenedComment,
 } from './types.js';
 
 export class AzureDevOpsClient {
@@ -45,7 +46,7 @@ export class AzureDevOpsClient {
       );
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
   }
 
   /**
@@ -112,36 +113,14 @@ export class AzureDevOpsClient {
     project: string,
     repo: string,
     prId: number
-  ): Promise<
-    Array<{
-      threadId: number;
-      threadStatus: string;
-      filePath?: string;
-      lineNumber?: number;
-      comment: {
-        id: number;
-        parentCommentId: number;
-        author: { displayName: string; uniqueName?: string; id: string };
-        content: string;
-        publishedDate: string;
-        lastUpdatedDate: string;
-        commentType: string;
-      };
-    }>
-  > {
+  ): Promise<AdoFlattenedComment[]> {
     const threadsResponse = await this.getPullRequestThreads(
       project,
       repo,
       prId
     );
 
-    const allComments: Array<{
-      threadId: number;
-      threadStatus: string;
-      filePath?: string;
-      lineNumber?: number;
-      comment: any;
-    }> = [];
+    const allComments: AdoFlattenedComment[] = [];
 
     for (const thread of threadsResponse.value) {
       for (const comment of thread.comments) {

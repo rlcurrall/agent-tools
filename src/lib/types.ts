@@ -1,3 +1,45 @@
+// ============================================================================
+// Atlassian Document Format (ADF) Types
+// ============================================================================
+
+/**
+ * ADF Mark - formatting applied to text (bold, italic, links, etc.)
+ */
+export interface AdfMark {
+  type: string;
+  attrs?: Record<string, string | number | boolean | null | undefined>;
+}
+
+/**
+ * ADF Node - represents a single node in the ADF document tree
+ */
+export interface AdfNode {
+  type: string;
+  content?: AdfNode[];
+  attrs?: Record<string, string | number | boolean | null | undefined>;
+  text?: string;
+  marks?: AdfMark[];
+  version?: number;
+}
+
+/**
+ * ADF Document - root node of an ADF document
+ */
+export interface AdfDocument extends AdfNode {
+  type: 'doc';
+  version: 1;
+  content: AdfNode[];
+}
+
+/**
+ * Input that can be converted to/from ADF - either a proper ADF document or a string
+ */
+export type AdfInput = AdfDocument | AdfNode | string | null | undefined;
+
+// ============================================================================
+// Jira Types
+// ============================================================================
+
 export interface JiraConfig {
   url: string;
   email: string;
@@ -43,15 +85,7 @@ export interface JiraAttachment {
 export interface JiraComment {
   id: string;
   author: JiraUser;
-  body:
-    | {
-        content?: Array<{
-          content?: Array<{
-            text?: string;
-          }>;
-        }>;
-      }
-    | string;
+  body: AdfNode | string;
   created: string;
   updated: string;
 }
@@ -67,13 +101,7 @@ export interface JiraSubtask {
 export interface JiraIssueFields {
   key: string;
   summary: string;
-  description?: {
-    content?: Array<{
-      content?: Array<{
-        text?: string;
-      }>;
-    }>;
-  };
+  description?: AdfNode;
   status: JiraStatus;
   assignee?: JiraUser;
   reporter: JiraUser;
@@ -108,11 +136,25 @@ export interface JiraIssueResponse extends JiraIssue {
   errors?: Record<string, string>;
 }
 
-export interface CliOptions {
-  help?: boolean;
+/**
+ * Response from Jira's GET /issue/{issueKey}/comment endpoint
+ */
+export interface JiraCommentsResponse {
+  startAt: number;
+  maxResults: number;
+  total: number;
+  comments: JiraComment[];
 }
 
+/**
+ * Response from Jira's POST /issue/{issueKey}/comment endpoint
+ */
+export interface JiraAddCommentResponse extends JiraComment {}
+
+// ============================================================================
 // Azure DevOps Types
+// ============================================================================
+
 export interface AzureDevOpsConfig {
   orgUrl: string;
   pat: string;
@@ -137,7 +179,7 @@ export interface AzureDevOpsPRThread {
     rightFileStart?: { line: number; offset: number };
     rightFileEnd?: { line: number; offset: number };
   };
-  properties?: any;
+  properties?: unknown;
 }
 
 export interface AzureDevOpsPRComment {
@@ -168,6 +210,38 @@ export interface AzureDevOpsPullRequest {
   createdBy: AzureDevOpsIdentity;
   creationDate: string;
   repository: AzureDevOpsRepository;
+}
+
+/**
+ * Flattened comment structure from Azure DevOps PR threads
+ * This is the structure returned by AzureDevOpsClient.getAllComments()
+ */
+export interface AdoFlattenedComment {
+  threadId: number;
+  threadStatus: string;
+  filePath?: string;
+  lineNumber?: number;
+  comment: {
+    id: number;
+    parentCommentId: number;
+    author: {
+      displayName: string;
+      uniqueName?: string;
+      id: string;
+    };
+    content: string;
+    publishedDate: string;
+    lastUpdatedDate: string;
+    commentType: string;
+  };
+}
+
+// ============================================================================
+// CLI Types
+// ============================================================================
+
+export interface CliOptions {
+  help?: boolean;
 }
 
 export interface GitRemoteInfo {

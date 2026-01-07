@@ -1,3 +1,10 @@
+import type {
+  JiraSearchResponse,
+  JiraIssueResponse,
+  AdfInput,
+  AdfNode,
+} from './types.js';
+
 export function parseArgs(args: string[]): {
   query?: string;
   maxResults?: number;
@@ -38,7 +45,7 @@ export function parseTicketArgs(args: string[]): {
   return result;
 }
 
-export function formatSearchResults(response: any): string {
+export function formatSearchResults(response: JiraSearchResponse): string {
   if (response.errorMessages || response.errors) {
     return `Error: ${response.errorMessages?.join(', ') || JSON.stringify(response.errors)}`;
   }
@@ -65,27 +72,27 @@ export function formatSearchResults(response: any): string {
   return output.trimEnd();
 }
 
-function extractTextFromContent(content: any): string {
+function extractTextFromContent(content: AdfInput): string {
   if (typeof content === 'string') {
     return content;
   }
 
-  if (!content?.content || !Array.isArray(content.content)) {
+  if (!content || !content.content || !Array.isArray(content.content)) {
     return '';
   }
 
   return content.content
-    .map((item: any) => {
+    .map((item: AdfNode) => {
       if (item.text) return item.text;
       if (item.content && Array.isArray(item.content)) {
-        return item.content.map((subItem: any) => subItem.text || '').join('');
+        return item.content.map((subItem: AdfNode) => subItem.text || '').join('');
       }
       return '';
     })
     .join('');
 }
 
-export function formatTicketDetails(issue: any): string {
+export function formatTicketDetails(issue: JiraIssueResponse): string {
   if (issue.errorMessages || issue.errors) {
     return `Error: ${issue.errorMessages?.join(', ') || JSON.stringify(issue.errors) || 'Ticket not found or access denied'}`;
   }

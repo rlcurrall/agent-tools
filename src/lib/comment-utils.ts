@@ -1,4 +1,5 @@
 import { convert, type ConversionResult } from './adf-to-md.js';
+import type { AdfInput, AdfNode, JiraComment } from './types.js';
 
 export interface CommentFilter {
   author?: string;
@@ -13,10 +14,10 @@ export interface FormattedComment {
   created: string;
   updated: string;
   body: string;
-  raw?: any;
+  raw?: JiraComment;
 }
 
-export function convertAdfToMarkdown(adfContent: any): string {
+export function convertAdfToMarkdown(adfContent: AdfInput): string {
   if (!adfContent) {
     return '';
   }
@@ -41,20 +42,20 @@ export function convertAdfToMarkdown(adfContent: any): string {
   }
 }
 
-function extractTextFromAdf(content: any): string {
+function extractTextFromAdf(content: AdfInput): string {
   if (typeof content === 'string') {
     return content;
   }
 
-  if (!content?.content || !Array.isArray(content.content)) {
+  if (!content || !content.content || !Array.isArray(content.content)) {
     return '';
   }
 
   return content.content
-    .map((item: any) => {
+    .map((item: AdfNode) => {
       if (item.text) return item.text;
       if (item.content && Array.isArray(item.content)) {
-        return item.content.map((subItem: any) => subItem.text || '').join('');
+        return item.content.map((subItem: AdfNode) => subItem.text || '').join('');
       }
       return '';
     })
@@ -62,7 +63,7 @@ function extractTextFromAdf(content: any): string {
 }
 
 export function formatComment(
-  comment: any,
+  comment: JiraComment,
   format: 'text' | 'json' | 'markdown' = 'text'
 ): string {
   const formattedComment: FormattedComment = {
@@ -97,7 +98,10 @@ ${formattedComment.body}`;
   }
 }
 
-export function filterComments(comments: any[], filter: CommentFilter): any[] {
+export function filterComments(
+  comments: JiraComment[],
+  filter: CommentFilter
+): JiraComment[] {
   let filtered = [...comments];
 
   // Filter by author
@@ -131,7 +135,7 @@ export function filterComments(comments: any[], filter: CommentFilter): any[] {
 }
 
 export function formatCommentsOutput(
-  comments: any[],
+  comments: JiraComment[],
   format: 'text' | 'json' | 'markdown' = 'text',
   issueKey?: string
 ): string {
@@ -168,9 +172,12 @@ export function formatCommentsOutput(
   }
 
   for (let i = 0; i < comments.length; i++) {
-    output += formatComment(comments[i], format);
-    if (i < comments.length - 1) {
-      output += '\n\n';
+    const comment = comments[i];
+    if (comment) {
+      output += formatComment(comment, format);
+      if (i < comments.length - 1) {
+        output += '\n\n';
+      }
     }
   }
 

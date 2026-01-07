@@ -6,21 +6,8 @@
  * Vendored and modernized for TypeScript with direct `marked` usage
  */
 
-import { marked, type Token } from 'marked';
-
-interface AdfNode {
-  type: string;
-  content?: AdfNode[];
-  attrs?: Record<string, any>;
-  text?: string;
-  marks?: AdfMark[];
-  version?: number;
-}
-
-interface AdfMark {
-  type: string;
-  attrs?: Record<string, any>;
-}
+import { marked, type Token, type Tokens } from 'marked';
+import type { AdfNode, AdfDocument } from './types.js';
 
 function generateLocalId(): string {
   // Simple UUID v4 generator for local IDs
@@ -80,22 +67,24 @@ function tokenToAdf(token: Token): AdfNode | null {
       return {
         type: token.ordered ? 'orderedList' : 'bulletList',
         attrs: { order: token.ordered ? 1 : undefined },
-        content: token.items.map((item: any) => processListItem(item)),
+        content: token.items.map((item: Tokens.ListItem) =>
+          processListItem(item)
+        ),
       };
 
     case 'table':
       const headerRow: AdfNode = {
         type: 'tableRow',
-        content: token.header.map((cell: any) => ({
+        content: token.header.map((cell: Tokens.TableCell) => ({
           type: 'tableHeader',
           attrs: {},
           content: inlineToAdf(cell.tokens || []),
         })),
       };
 
-      const bodyRows = token.rows.map((row: any) => ({
+      const bodyRows = token.rows.map((row: Tokens.TableCell[]) => ({
         type: 'tableRow',
-        content: row.map((cell: any) => ({
+        content: row.map((cell: Tokens.TableCell) => ({
           type: 'tableCell',
           attrs: {},
           content: inlineToAdf(cell.tokens || []),
@@ -128,14 +117,14 @@ function tokenToAdf(token: Token): AdfNode | null {
   }
 }
 
-function processListItem(item: any): AdfNode {
+function processListItem(item: Tokens.ListItem): AdfNode {
   const itemTokens = marked.lexer(item.text);
 
   // Check if this is a task list item
   const taskMatch = item.text.match(/^(\[[ x]\])\s*(.*)/);
   if (taskMatch) {
     const isChecked = taskMatch[1] === '[x]';
-    const taskText = taskMatch[2];
+    const taskText = taskMatch[2] ?? '';
     const taskTokens = marked.lexer(taskText);
 
     return {
@@ -251,7 +240,7 @@ function inlineTokenToAdf(token: Token): AdfNode[] {
   }
 }
 
-export function convert(markdown: string): AdfNode {
+export function convert(markdown: string): AdfDocument {
   if (!markdown || typeof markdown !== 'string') {
     return {
       type: 'doc',

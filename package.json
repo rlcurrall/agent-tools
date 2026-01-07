@@ -1,13 +1,20 @@
 {
-  "name": "jira-cli-agent-tools",
-  "version": "1.0.0",
-  "description": "Bun implementation of Jira CLI tools (called by wrapper scripts)",
+  "name": "aide",
+  "version": "2.0.0",
+  "description": "AI agent tools CLI for Jira and Azure DevOps",
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "bin": {
+    "aide": "./src/cli/index.ts"
+  },
   "scripts": {
-    "search": "bun run src/jira-search.ts",
-    "get-ticket": "bun run src/jira-get-ticket.ts",
+    "dev": "bun run src/cli/index.ts",
+    "build": "bun build --compile src/cli/index.ts --outfile dist/aide",
+    "build:win": "bun build --compile --target=bun-windows-x64 src/cli/index.ts --outfile dist/aide.exe",
+    "build:linux": "bun build --compile --target=bun-linux-x64 src/cli/index.ts --outfile dist/aide-linux",
+    "build:mac": "bun build --compile --target=bun-darwin-arm64 src/cli/index.ts --outfile dist/aide-mac",
+    "build:all": "bun run build:win && bun run build:linux && bun run build:mac",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -27,6 +34,8 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "marked": "^16.3.0"
+    "@types/yargs": "^17.0.35",
+    "marked": "^16.3.0",
+    "yargs": "^18.0.0"
   }
 }

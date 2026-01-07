@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run lint:*)",
+      "Bash(./setup.sh:*)",
+      "Bash(chmod:*)",
+      "Skill(beads:init)",
+      "Bash(bd:*)",
+      "Bash(ax:*)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "enabledPlugins": {}
+}

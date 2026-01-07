@@ -1,0 +1,9 @@
+{
+  "name": "aide",
+  "version": "1.0.0",
+  "description": "AI agent integration with Jira and Azure DevOps",
+  "author": {
+    "name": "Robb Currall"
+  },
+  "license": "MIT"
+}

@@ -2,6 +2,9 @@ import type {
   JiraConfig,
   JiraSearchResponse,
   JiraIssueResponse,
+  JiraCommentsResponse,
+  JiraAddCommentResponse,
+  AdfDocument,
 } from './types.js';
 
 export class JiraClient {
@@ -78,7 +81,10 @@ export class JiraClient {
     }
   }
 
-  async addComment(issueKey: string, adfBody: any): Promise<any> {
+  async addComment(
+    issueKey: string,
+    adfBody: AdfDocument
+  ): Promise<JiraAddCommentResponse> {
     const url = `${this.config.url}/rest/api/3/issue/${issueKey}/comment`;
 
     try {
@@ -95,7 +101,7 @@ export class JiraClient {
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      return await response.json();
+      return (await response.json()) as JiraAddCommentResponse;
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(
@@ -110,7 +116,7 @@ export class JiraClient {
     issueKey: string,
     startAt: number = 0,
     maxResults: number = 100
-  ): Promise<any> {
+  ): Promise<JiraCommentsResponse> {
     const url = `${this.config.url}/rest/api/3/issue/${issueKey}/comment?startAt=${startAt}&maxResults=${maxResults}`;
 
     try {
@@ -124,7 +130,7 @@ export class JiraClient {
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      return await response.json();
+      return (await response.json()) as JiraCommentsResponse;
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(
@@ -135,7 +141,7 @@ export class JiraClient {
     }
   }
 
-  async setDescription(issueKey: string, adfBody: any): Promise<void> {
+  async setDescription(issueKey: string, adfBody: AdfDocument): Promise<void> {
     const url = `${this.config.url}/rest/api/3/issue/${issueKey}`;
 
     try {

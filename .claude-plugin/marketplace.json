@@ -1,0 +1,15 @@
+{
+  "name": "aide",
+  "description": "Local marketplace for aide plugin",
+  "owner": {
+    "name": "Robb Currall"
+  },
+  "plugins": [
+    {
+      "name": "aide",
+      "source": "./",
+      "description": "AI agent integration with Jira and Azure DevOps",
+      "version": "1.0.0"
+    }
+  ]
+}

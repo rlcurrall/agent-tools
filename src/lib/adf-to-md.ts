@@ -6,23 +6,11 @@
  * Vendored and modernized for TypeScript
  */
 
+import type { AdfNode, AdfInput } from './types.js';
+
 export interface ConversionResult {
   result: string;
   warnings: Record<string, string[]>;
-}
-
-interface AdfNode {
-  type: string;
-  content?: AdfNode[];
-  attrs?: Record<string, any>;
-  text?: string;
-  marks?: AdfMark[];
-  version?: number;
-}
-
-interface AdfMark {
-  type: string;
-  attrs?: Record<string, any>;
 }
 
 function convertNode(
@@ -42,7 +30,7 @@ function convertNode(
       return content.map((child) => convertNode(child, warnings)).join('');
 
     case 'heading':
-      const level = node.attrs?.level || 1;
+      const level = Number(node.attrs?.level) || 1;
       const headingText = content
         .map((child) => convertNode(child, warnings))
         .join('');
@@ -209,7 +197,7 @@ function addWarning(
   }
 }
 
-function validateInput(adf: any): void {
+function validateInput(adf: AdfInput): asserts adf is AdfNode {
   if (!adf || typeof adf !== 'object') {
     throw new Error('Input must be a valid ADF object');
   }
@@ -219,7 +207,7 @@ function validateInput(adf: any): void {
   }
 }
 
-export function convert(adf: any): ConversionResult {
+export function convert(adf: AdfInput): ConversionResult {
   const warnings: Record<string, string[]> = {};
 
   try {
