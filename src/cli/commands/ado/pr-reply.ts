@@ -3,7 +3,7 @@
  * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-thread-comments/create?view=azure-devops-rest-7.1
  */
 
-import type { CommandModule, ArgumentsCamelCase } from 'yargs';
+import type { CommandModule, ArgumentsCamelCase, Argv } from 'yargs';
 import { loadAzureDevOpsConfig } from '@lib/config.js';
 import { AzureDevOpsClient } from '@lib/azure-devops-client.js';
 import {
@@ -236,43 +236,43 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
 export const prReplyCommand: CommandModule<object, PrReplyArgv> = {
   command: 'reply [prIdOrUrl] <replyText>',
   describe: 'Reply to a comment thread on an Azure DevOps pull request',
-  builder: {
-    prIdOrUrl: {
-      type: 'string',
-      describe:
-        'PR ID or full PR URL (auto-detected from current branch if omitted)',
-      coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
-    },
-    replyText: {
-      type: 'string',
-      describe: 'The reply text content',
-      demandOption: true,
-      coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
-    },
-    thread: {
-      type: 'number',
-      describe: 'Thread ID to reply to (required)',
-      demandOption: true,
-    },
-    parent: {
-      type: 'number',
-      describe:
-        'Parent comment ID to reply to a specific comment (optional, 0 or omit for root-level reply)',
-    },
-    project: {
-      type: 'string',
-      describe: 'Azure DevOps project name (auto-discovered from git remote)',
-    },
-    repo: {
-      type: 'string',
-      describe: 'Repository name (auto-discovered from git remote)',
-    },
-    format: {
-      type: 'string',
-      choices: ['text', 'json', 'markdown'] as const,
-      default: 'text' as const,
-      describe: 'Output format',
-    },
-  },
+  builder: (yargs: Argv) =>
+    yargs
+      .positional('prIdOrUrl', {
+        type: 'string',
+        describe:
+          'PR ID or full PR URL (auto-detected from current branch if omitted)',
+        coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
+      })
+      .positional('replyText', {
+        type: 'string',
+        describe: 'The reply text content',
+        demandOption: true,
+        coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
+      })
+      .option('thread', {
+        type: 'number',
+        describe: 'Thread ID to reply to (required)',
+        demandOption: true,
+      })
+      .option('parent', {
+        type: 'number',
+        describe:
+          'Parent comment ID to reply to a specific comment (optional, 0 or omit for root-level reply)',
+      })
+      .option('project', {
+        type: 'string',
+        describe: 'Azure DevOps project name (auto-discovered from git remote)',
+      })
+      .option('repo', {
+        type: 'string',
+        describe: 'Repository name (auto-discovered from git remote)',
+      })
+      .option('format', {
+        type: 'string',
+        choices: ['text', 'json', 'markdown'] as const,
+        default: 'text' as const,
+        describe: 'Output format',
+      }) as Argv<PrReplyArgv>,
   handler,
 };

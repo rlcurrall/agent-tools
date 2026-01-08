@@ -3,7 +3,7 @@
  * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-threads/create?view=azure-devops-rest-7.1
  */
 
-import type { CommandModule, ArgumentsCamelCase } from 'yargs';
+import type { CommandModule, ArgumentsCamelCase, Argv } from 'yargs';
 import { loadAzureDevOpsConfig } from '@lib/config.js';
 import { AzureDevOpsClient } from '@lib/azure-devops-client.js';
 import {
@@ -257,45 +257,45 @@ async function handler(argv: ArgumentsCamelCase<PrCommentArgv>): Promise<void> {
 export const prCommentCommand: CommandModule<object, PrCommentArgv> = {
   command: 'comment [prIdOrUrl] <comment>',
   describe: 'Post a comment on an Azure DevOps pull request',
-  builder: {
-    prIdOrUrl: {
-      type: 'string',
-      describe:
-        'PR ID or full PR URL (auto-detected from current branch if omitted)',
-      coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
-    },
-    comment: {
-      type: 'string',
-      demandOption: true,
-      describe: 'Comment text to post',
-      coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
-    },
-    project: {
-      type: 'string',
-      describe: 'Azure DevOps project name (auto-discovered from git remote)',
-    },
-    repo: {
-      type: 'string',
-      describe: 'Repository name (auto-discovered from git remote)',
-    },
-    format: {
-      type: 'string',
-      choices: ['text', 'json', 'markdown'] as const,
-      default: 'text' as const,
-      describe: 'Output format',
-    },
-    file: {
-      type: 'string',
-      describe: 'File path for file-specific comment (requires --line)',
-    },
-    line: {
-      type: 'number',
-      describe: 'Line number for file-specific comment (requires --file)',
-    },
-    'end-line': {
-      type: 'number',
-      describe: 'End line number for multi-line comment range',
-    },
-  },
+  builder: (yargs: Argv) =>
+    yargs
+      .positional('prIdOrUrl', {
+        type: 'string',
+        describe:
+          'PR ID or full PR URL (auto-detected from current branch if omitted)',
+        coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
+      })
+      .positional('comment', {
+        type: 'string',
+        demandOption: true,
+        describe: 'Comment text to post',
+        coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
+      })
+      .option('project', {
+        type: 'string',
+        describe: 'Azure DevOps project name (auto-discovered from git remote)',
+      })
+      .option('repo', {
+        type: 'string',
+        describe: 'Repository name (auto-discovered from git remote)',
+      })
+      .option('format', {
+        type: 'string',
+        choices: ['text', 'json', 'markdown'] as const,
+        default: 'text' as const,
+        describe: 'Output format',
+      })
+      .option('file', {
+        type: 'string',
+        describe: 'File path for file-specific comment (requires --line)',
+      })
+      .option('line', {
+        type: 'number',
+        describe: 'Line number for file-specific comment (requires --file)',
+      })
+      .option('end-line', {
+        type: 'number',
+        describe: 'End line number for multi-line comment range',
+      }) as Argv<PrCommentArgv>,
   handler,
 };
