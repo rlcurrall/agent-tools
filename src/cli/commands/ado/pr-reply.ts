@@ -234,10 +234,15 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
 }
 
 export const prReplyCommand: CommandModule<object, PrReplyArgv> = {
-  command: 'reply <replyText>',
+  command: 'reply <thread> <replyText>',
   describe: 'Reply to a comment thread on an Azure DevOps pull request',
   builder: (yargs: Argv) =>
     yargs
+      .positional('thread', {
+        type: 'number',
+        describe: 'Thread ID to reply to',
+        demandOption: true,
+      })
       .positional('replyText', {
         type: 'string',
         describe: 'The reply text content',
@@ -249,11 +254,6 @@ export const prReplyCommand: CommandModule<object, PrReplyArgv> = {
         describe:
           'PR ID or full PR URL (auto-detected from current branch if omitted)',
         coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
-      })
-      .option('thread', {
-        type: 'number',
-        describe: 'Thread ID to reply to (required)',
-        demandOption: true,
       })
       .option('parent', {
         type: 'number',

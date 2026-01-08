@@ -7,9 +7,9 @@ Reply to an existing comment thread on an Azure DevOps pull request.
 
 ## Usage
 
-`/aide:pr-reply "reply text" --thread <thread-id>` - Auto-detect PR, reply to thread
-`/aide:pr-reply "reply text" --thread <thread-id> --pr <pr-id>` - Reply to specific PR's thread
-`/aide:pr-reply "reply" --thread <thread-id> --parent <comment-id>` - Reply to specific comment in thread
+`/aide:pr-reply <thread-id> "reply text"` - Auto-detect PR, reply to thread
+`/aide:pr-reply <thread-id> "reply text" --pr <pr-id>` - Reply to specific PR's thread
+`/aide:pr-reply <thread-id> "reply" --parent <comment-id>` - Reply to specific comment in thread
 
 ## Execution
 
@@ -23,7 +23,6 @@ aide ado reply $ARGUMENTS
 
 | Flag       | Description                                         |
 | ---------- | --------------------------------------------------- |
-| `--thread` | Thread ID to reply to (required)                    |
 | `--pr`     | PR ID or URL (auto-detected from branch if omitted) |
 | `--parent` | Parent comment ID for nested replies                |
 
@@ -49,13 +48,13 @@ Use replies to:
 
 ```bash
 # Reply to a thread (auto-detect PR from branch)
-aide ado reply "Fixed as suggested in the latest commit" --thread 156
+aide ado reply 156 "Fixed as suggested in the latest commit"
 
 # Reply to specific PR's thread
-aide ado reply "Done, please re-review" --thread 156 --pr 24094
+aide ado reply 156 "Done, please re-review" --pr 24094
 
 # Reply to specific comment in a thread
-aide ado reply "Good point, I've updated the implementation" --thread 156 --parent 789 --pr 24094
+aide ado reply 156 "Good point, I've updated the implementation" --parent 789 --pr 24094
 ```
 
 ## Finding Thread IDs
