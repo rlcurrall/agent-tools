@@ -6,35 +6,31 @@
 import type { CommandModule, ArgumentsCamelCase } from 'yargs';
 import { loadConfig } from '@lib/config.js';
 import { JiraClient } from '@lib/jira-client.js';
-import { validateTicketKey } from '@lib/cli-utils.js';
 import { convert as markdownToAdf } from '@lib/md-to-adf.js';
+import { validateArgs } from '@lib/validation.js';
+import { isValidTicketKeyFormat } from '@schemas/common.js';
+import { CommentArgsSchema, type CommentArgs } from '@schemas/jira/comment.js';
 
-export interface CommentArgv {
-  ticketKey: string;
-  comment?: string;
-  file?: string;
-  format: 'text' | 'json' | 'markdown';
-}
-
-async function handler(argv: ArgumentsCamelCase<CommentArgv>): Promise<void> {
-  const { ticketKey, format } = argv;
+async function handler(argv: ArgumentsCamelCase<CommentArgs>): Promise<void> {
+  const args = validateArgs(CommentArgsSchema, argv, 'comment arguments');
+  const { ticketKey, format } = args;
 
   // Get comment content from args or file
   let markdownContent: string;
 
-  if (argv.file) {
+  if (args.file) {
     try {
-      const file = Bun.file(argv.file);
+      const file = Bun.file(args.file);
       markdownContent = await file.text();
     } catch (error) {
-      console.error(`Error: Could not read file '${argv.file}'`);
+      console.error(`Error: Could not read file '${args.file}'`);
       if (error instanceof Error) {
         console.error(`Details: ${error.message}`);
       }
       process.exit(1);
     }
-  } else if (argv.comment) {
-    markdownContent = argv.comment;
+  } else if (args.comment) {
+    markdownContent = args.comment;
   } else {
     console.error('Error: Comment content is required.');
     console.error(
@@ -43,10 +39,11 @@ async function handler(argv: ArgumentsCamelCase<CommentArgv>): Promise<void> {
     process.exit(1);
   }
 
-  // Validate ticket key format
-  const validation = validateTicketKey(ticketKey);
-  if (!validation.valid && validation.warning) {
-    console.log(validation.warning);
+  // Validate ticket key format (soft validation with warning)
+  if (!isValidTicketKeyFormat(ticketKey)) {
+    console.log(
+      `Warning: '${ticketKey}' doesn't match typical Jira ticket format (PROJECT-123)`
+    );
     console.log('Proceeding anyway...');
     console.log('');
   }
@@ -88,7 +85,7 @@ async function handler(argv: ArgumentsCamelCase<CommentArgv>): Promise<void> {
   }
 }
 
-export const commentCommand: CommandModule<object, CommentArgv> = {
+export const commentCommand: CommandModule<object, CommentArgs> = {
   command: 'comment <ticketKey> [comment]',
   describe: 'Add a comment to a ticket',
   builder: {

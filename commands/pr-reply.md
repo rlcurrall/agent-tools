@@ -1,9 +1,9 @@
 ---
-description: Reply to Azure DevOps PR thread
+description: Reply to PR thread
 allowed-tools: Bash(aide:*)
 ---
 
-Reply to an existing comment thread on an Azure DevOps pull request.
+Reply to an existing comment thread on a pull request.
 
 ## Usage
 
@@ -16,7 +16,7 @@ Reply to an existing comment thread on an Azure DevOps pull request.
 Run the following command with the provided arguments:
 
 ```bash
-aide ado reply $ARGUMENTS
+aide pr reply $ARGUMENTS
 ```
 
 ## Flags
@@ -48,13 +48,13 @@ Use replies to:
 
 ```bash
 # Reply to a thread (auto-detect PR from branch)
-aide ado reply 156 "Fixed as suggested in the latest commit"
+aide pr reply 156 "Fixed as suggested in the latest commit"
 
 # Reply to specific PR's thread
-aide ado reply 156 "Done, please re-review" --pr 24094
+aide pr reply 156 "Done, please re-review" --pr 24094
 
 # Reply to specific comment in a thread
-aide ado reply 156 "Good point, I've updated the implementation" --parent 789 --pr 24094
+aide pr reply 156 "Good point, I've updated the implementation" --parent 789 --pr 24094
 ```
 
 ## Finding Thread IDs

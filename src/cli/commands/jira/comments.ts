@@ -6,23 +6,18 @@
 import type { CommandModule, ArgumentsCamelCase } from 'yargs';
 import { loadConfig } from '@lib/config.js';
 import { JiraClient } from '@lib/jira-client.js';
-import { validateTicketKey } from '@lib/cli-utils.js';
+import { validateArgs } from '@lib/validation.js';
+import { isValidTicketKeyFormat } from '@schemas/common.js';
 import {
   filterComments,
   formatCommentsOutput,
   type CommentFilter,
 } from '@lib/comment-utils.js';
 import type { JiraComment } from '@lib/types.js';
-
-export interface CommentsArgv {
-  ticketKey: string;
-  format: 'text' | 'json' | 'markdown';
-  author?: string;
-  since?: string;
-  latest?: number;
-  maxResults: number;
-  all: boolean;
-}
+import {
+  CommentsArgsSchema,
+  type CommentsArgs,
+} from '@schemas/jira/comments.js';
 
 /**
  * Fetch all comments with pagination support
@@ -59,13 +54,15 @@ async function getAllComments(
   return allComments;
 }
 
-async function handler(argv: ArgumentsCamelCase<CommentsArgv>): Promise<void> {
-  const { ticketKey, format, author, since, latest, maxResults, all } = argv;
+async function handler(argv: ArgumentsCamelCase<CommentsArgs>): Promise<void> {
+  const args = validateArgs(CommentsArgsSchema, argv, 'comments arguments');
+  const { ticketKey, format, author, since, latest, maxResults, all } = args;
 
-  // Validate ticket key format
-  const validation = validateTicketKey(ticketKey);
-  if (!validation.valid && validation.warning) {
-    console.log(validation.warning);
+  // Validate ticket key format (soft validation with warning)
+  if (!isValidTicketKeyFormat(ticketKey)) {
+    console.log(
+      `Warning: '${ticketKey}' doesn't match typical Jira ticket format (PROJECT-123)`
+    );
     console.log('Proceeding anyway...');
     console.log('');
   }
@@ -112,7 +109,7 @@ async function handler(argv: ArgumentsCamelCase<CommentsArgv>): Promise<void> {
   }
 }
 
-export const commentsCommand: CommandModule<object, CommentsArgv> = {
+export const commentsCommand: CommandModule<object, CommentsArgs> = {
   command: 'comments <ticketKey>',
   describe: 'Get comments from a ticket',
   builder: {

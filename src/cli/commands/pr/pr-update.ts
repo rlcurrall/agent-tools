@@ -1,5 +1,6 @@
 /**
- * ADO pr update command - Update an Azure DevOps pull request
+ * PR update command - Update a pull request
+ * Supports Azure DevOps (with GitHub support planned)
  * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/update?view=azure-devops-rest-7.1
  */
 
@@ -17,22 +18,12 @@ import type {
   PullRequestUpdateOptions,
   GitRemoteInfo,
 } from '@lib/types.js';
-
-type OutputFormat = 'text' | 'json' | 'markdown';
-
-export interface PrUpdateArgv {
-  prIdOrUrl?: string;
-  project?: string;
-  repo?: string;
-  format: OutputFormat;
-  title?: string;
-  description?: string;
-  target?: string;
-  draft?: boolean;
-  publish?: boolean;
-  abandon?: boolean;
-  activate?: boolean;
-}
+import { validateArgs } from '@lib/validation.js';
+import {
+  PrUpdateArgsSchema,
+  type PrUpdateArgs,
+  type OutputFormat,
+} from '@schemas/pr/pr-update.js';
 
 /**
  * Ensure branch name has refs/heads/ prefix
@@ -115,9 +106,10 @@ function formatOutput(
   return output;
 }
 
-async function handler(argv: ArgumentsCamelCase<PrUpdateArgv>): Promise<void> {
+async function handler(argv: ArgumentsCamelCase<PrUpdateArgs>): Promise<void> {
+  const args = validateArgs(PrUpdateArgsSchema, argv, 'pr-update arguments');
   let prId: number | undefined;
-  let { project, repo } = argv;
+  let { project, repo } = args;
   const {
     format,
     title,
@@ -127,7 +119,7 @@ async function handler(argv: ArgumentsCamelCase<PrUpdateArgv>): Promise<void> {
     publish,
     abandon,
     activate,
-  } = argv;
+  } = args;
   let repoInfo: GitRemoteInfo | null = null;
 
   // Validate conflicting flags
@@ -157,11 +149,11 @@ async function handler(argv: ArgumentsCamelCase<PrUpdateArgv>): Promise<void> {
   }
 
   // Parse PR ID or URL, or auto-detect from current branch
-  if (argv.prIdOrUrl) {
-    if (argv.prIdOrUrl.startsWith('http')) {
-      const parsed = parsePRUrl(argv.prIdOrUrl);
+  if (args.prIdOrUrl) {
+    if (args.prIdOrUrl.startsWith('http')) {
+      const parsed = parsePRUrl(args.prIdOrUrl);
       if (!parsed) {
-        console.error(`Error: Invalid Azure DevOps PR URL: ${argv.prIdOrUrl}`);
+        console.error(`Error: Invalid PR URL (expected Azure DevOps format): ${args.prIdOrUrl}`);
         console.error(
           'Expected format: https://dev.azure.com/{org}/{project}/_git/{repo}/pullrequest/{id}'
         );
@@ -172,12 +164,12 @@ async function handler(argv: ArgumentsCamelCase<PrUpdateArgv>): Promise<void> {
       project = parsed.project;
       repo = parsed.repo;
     } else {
-      const validation = validatePRId(argv.prIdOrUrl);
+      const validation = validatePRId(args.prIdOrUrl);
       if (validation.valid) {
         prId = validation.value;
       } else {
         console.error(
-          `Error: Could not parse '${argv.prIdOrUrl}' as a PR ID. Expected a positive number or full PR URL.`
+          `Error: Could not parse '${args.prIdOrUrl}' as a PR ID. Expected a positive number or full PR URL.`
         );
         process.exit(1);
       }
@@ -190,7 +182,7 @@ async function handler(argv: ArgumentsCamelCase<PrUpdateArgv>): Promise<void> {
       console.error('');
       console.error('Either:');
       console.error(
-        '  1. Run this command from within a git repository with Azure DevOps remote'
+        '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
       );
       console.error('  2. Specify --project and --repo flags explicitly');
       console.error('  3. Provide a PR ID or full PR URL');
@@ -221,7 +213,7 @@ async function handler(argv: ArgumentsCamelCase<PrUpdateArgv>): Promise<void> {
     console.error('');
     console.error('Either:');
     console.error(
-      '  1. Run this command from within a git repository with Azure DevOps remote'
+      '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
     );
     console.error('  2. Specify --project and --repo flags explicitly');
     console.error('  3. Provide a full PR URL');
@@ -326,9 +318,9 @@ async function handler(argv: ArgumentsCamelCase<PrUpdateArgv>): Promise<void> {
   }
 }
 
-export const prUpdateCommand: CommandModule<object, PrUpdateArgv> = {
+export const prUpdateCommand: CommandModule<object, PrUpdateArgs> = {
   command: 'update [prIdOrUrl]',
-  describe: 'Update an Azure DevOps pull request',
+  describe: 'Update a pull request',
   builder: {
     prIdOrUrl: {
       type: 'string',
@@ -337,7 +329,7 @@ export const prUpdateCommand: CommandModule<object, PrUpdateArgv> = {
     },
     project: {
       type: 'string',
-      describe: 'Azure DevOps project name (auto-discovered from git remote)',
+      describe: 'Project name (auto-discovered from git remote)',
     },
     repo: {
       type: 'string',

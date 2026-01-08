@@ -40,15 +40,15 @@ bun run dev <command>
 # Get help
 aide --help
 aide jira --help
-aide ado --help
+aide pr --help
 
 # Search Jira tickets
 aide jira search "assignee = currentUser()"
 aide jira ticket PROJ-123
 
-# List Azure DevOps PRs
-aide ado prs --status active
-aide ado comments 24094 --latest 5
+# List pull requests
+aide pr prs --status active
+aide pr comments 24094 --latest 5
 ```
 
 ## Command Structure
@@ -59,10 +59,10 @@ aide <service> <action> [options]
 
 ### Services
 
-| Service | Description                |
-| ------- | -------------------------- |
-| `jira`  | Jira ticket management     |
-| `ado`   | Azure DevOps pull requests |
+| Service | Description            |
+| ------- | ---------------------- |
+| `jira`  | Jira ticket management |
+| `pr`    | Pull request management |
 
 ### Jira Commands
 
@@ -74,12 +74,12 @@ aide <service> <action> [options]
 | `aide jira comments <key>`       | Get ticket comments      |
 | `aide jira desc <key> <text>`    | Set ticket description   |
 
-### Azure DevOps Commands
+### Pull Request Commands
 
-| Command                     | Description        |
-| --------------------------- | ------------------ |
-| `aide ado prs`              | List pull requests |
-| `aide ado comments <pr-id>` | Get PR comments    |
+| Command                    | Description        |
+| -------------------------- | ------------------ |
+| `aide pr prs`              | List pull requests |
+| `aide pr comments <pr-id>` | Get PR comments    |
 
 ## Usage Examples
 
@@ -102,19 +102,19 @@ aide jira comments PROJ-123 --latest 5
 aide jira desc PROJ-123 "New description text"
 ```
 
-### Azure DevOps
+### Pull Requests
 
 ```bash
 # List active PRs (auto-discovers project from git remote)
-aide ado prs
+aide pr prs
 
 # List PRs with filters
-aide ado prs --status completed --limit 10
-aide ado prs --created-by "your.email@company.com"
+aide pr prs --status completed --limit 10
+aide pr prs --created-by "your.email@company.com"
 
 # Get PR comments
-aide ado comments 24094
-aide ado comments 24094 --latest 5 --format json
+aide pr comments 24094
+aide pr comments 24094 --latest 5 --format json
 ```
 
 ### Output Formats
@@ -127,7 +127,7 @@ All commands support `--format` flag:
 
 ```bash
 aide jira search "status = Open" --format json
-aide ado comments 24094 --format markdown
+aide pr comments 24094 --format markdown
 ```
 
 ## Configuration
@@ -156,7 +156,7 @@ You can store these in:
 
 ## Auto-Discovery
 
-When running from within a git repository with an Azure DevOps remote, ADO commands automatically detect:
+When running from within a git repository with an Azure DevOps remote, PR commands automatically detect:
 
 - Organization
 - Project

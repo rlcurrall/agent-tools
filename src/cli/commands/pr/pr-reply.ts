@@ -1,5 +1,6 @@
 /**
- * ADO pr reply command - Reply to a comment thread on a pull request
+ * PR reply command - Reply to a comment thread on a pull request
+ * Supports Azure DevOps (with GitHub support planned)
  * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-thread-comments/create?view=azure-devops-rest-7.1
  */
 
@@ -13,18 +14,12 @@ import {
   findPRByCurrentBranch,
 } from '@lib/ado-utils.js';
 import type { AzureDevOpsCreateCommentResponse } from '@lib/types.js';
-
-type OutputFormat = 'text' | 'json' | 'markdown';
-
-export interface PrReplyArgv {
-  pr?: string;
-  replyText: string;
-  thread: number;
-  parent?: number;
-  project?: string;
-  repo?: string;
-  format: OutputFormat;
-}
+import { validateArgs } from '@lib/validation.js';
+import {
+  PrReplyArgsSchema,
+  type PrReplyArgs,
+  type OutputFormat,
+} from '@schemas/pr/pr-reply.js';
 
 /**
  * Format the reply output based on format type
@@ -77,10 +72,11 @@ function formatOutput(
   return output;
 }
 
-async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
+async function handler(argv: ArgumentsCamelCase<PrReplyArgs>): Promise<void> {
+  const args = validateArgs(PrReplyArgsSchema, argv, 'pr-reply arguments');
   let prId: number | undefined;
-  let { project, repo } = argv;
-  const { format, thread, parent, replyText } = argv;
+  let { project, repo } = args;
+  const { format, thread, parent, replyText } = args;
 
   // Auto-discover project/repo from git remote
   if (!project || !repo) {
@@ -98,11 +94,11 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
   }
 
   // Parse PR ID or URL, or auto-detect from current branch
-  if (argv.pr) {
-    if (argv.pr.startsWith('http')) {
-      const parsed = parsePRUrl(argv.pr);
+  if (args.pr) {
+    if (args.pr.startsWith('http')) {
+      const parsed = parsePRUrl(args.pr);
       if (!parsed) {
-        console.error(`Error: Invalid Azure DevOps PR URL: ${argv.pr}`);
+        console.error(`Error: Invalid PR URL (expected Azure DevOps format): ${args.pr}`);
         console.error(
           'Expected format: https://dev.azure.com/{org}/{project}/_git/{repo}/pullrequest/{id}'
         );
@@ -113,12 +109,12 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
       project = parsed.project;
       repo = parsed.repo;
     } else {
-      const validation = validatePRId(argv.pr);
+      const validation = validatePRId(args.pr);
       if (validation.valid) {
         prId = validation.value;
       } else {
         console.error(
-          `Error: Could not parse '${argv.pr}' as a PR ID. Expected a positive number or full PR URL.`
+          `Error: Could not parse '${args.pr}' as a PR ID. Expected a positive number or full PR URL.`
         );
         process.exit(1);
       }
@@ -131,7 +127,7 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
       console.error('');
       console.error('Either:');
       console.error(
-        '  1. Run this command from within a git repository with Azure DevOps remote'
+        '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
       );
       console.error('  2. Specify --project and --repo flags explicitly');
       console.error('  3. Provide a PR ID or full PR URL');
@@ -162,7 +158,7 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
     console.error('');
     console.error('Either:');
     console.error(
-      '  1. Run this command from within a git repository with Azure DevOps remote'
+      '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
     );
     console.error('  2. Specify --project and --repo flags explicitly');
     console.error('  3. Provide a full PR URL');
@@ -178,25 +174,7 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
     process.exit(1);
   }
 
-  // Validate thread ID
-  if (!thread || thread <= 0) {
-    console.error(
-      'Error: --thread is required and must be a positive integer.'
-    );
-    process.exit(1);
-  }
-
-  // Validate parent comment ID if provided
-  if (parent !== undefined && parent < 0) {
-    console.error('Error: --parent must be a non-negative integer.');
-    process.exit(1);
-  }
-
-  // Validate reply text
-  if (!replyText || replyText.trim().length === 0) {
-    console.error('Error: Reply text is required and cannot be empty.');
-    process.exit(1);
-  }
+  // Note: thread, parent, and replyText validation is now handled by Valibot schema
 
   try {
     const config = loadAzureDevOpsConfig();
@@ -211,12 +189,13 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
     }
 
     // Create the comment reply
+    // Note: replyText is already trimmed by Valibot schema
     const response = await client.createThreadComment(
       project,
       repo,
       prId,
       thread,
-      replyText.trim(),
+      replyText,
       parent
     );
 
@@ -233,9 +212,9 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
   }
 }
 
-export const prReplyCommand: CommandModule<object, PrReplyArgv> = {
+export const prReplyCommand: CommandModule<object, PrReplyArgs> = {
   command: 'reply <thread> <replyText>',
-  describe: 'Reply to a comment thread on an Azure DevOps pull request',
+  describe: 'Reply to a comment thread on a pull request',
   builder: (yargs: Argv) =>
     yargs
       .positional('thread', {
@@ -262,7 +241,7 @@ export const prReplyCommand: CommandModule<object, PrReplyArgv> = {
       })
       .option('project', {
         type: 'string',
-        describe: 'Azure DevOps project name (auto-discovered from git remote)',
+        describe: 'Project name (auto-discovered from git remote)',
       })
       .option('repo', {
         type: 'string',
@@ -273,6 +252,6 @@ export const prReplyCommand: CommandModule<object, PrReplyArgv> = {
         choices: ['text', 'json', 'markdown'] as const,
         default: 'text' as const,
         describe: 'Output format',
-      }) as Argv<PrReplyArgv>,
+      }) as Argv<PrReplyArgs>,
   handler,
 };

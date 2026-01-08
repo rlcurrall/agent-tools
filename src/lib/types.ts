@@ -40,12 +40,8 @@ export type AdfInput = AdfDocument | AdfNode | string | null | undefined;
 // Jira Types
 // ============================================================================
 
-export interface JiraConfig {
-  url: string;
-  email: string;
-  apiToken: string;
-  defaultProject?: string;
-}
+// JiraConfig is defined and exported from ../schemas/config.ts
+export type { JiraConfig } from '../schemas/config.js';
 
 export interface JiraUser {
   displayName: string;
@@ -155,12 +151,8 @@ export type JiraAddCommentResponse = JiraComment;
 // Azure DevOps Types
 // ============================================================================
 
-export interface AzureDevOpsConfig {
-  orgUrl: string;
-  pat: string;
-  authMethod: 'pat' | 'bearer';
-  defaultProject?: string;
-}
+// AzureDevOpsConfig is defined and exported from ../schemas/config.ts
+export type { AzureDevOpsConfig } from '../schemas/config.js';
 
 export interface AzureDevOpsIdentity {
   displayName: string;

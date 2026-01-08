@@ -11,7 +11,7 @@ The CLI follows a hierarchical command structure: `aide <service> <action> [opti
 **Services:**
 
 - `jira` - Jira ticket management (search, ticket, comment, comments, desc)
-- `ado` - Azure DevOps pull requests (prs, comments)
+- `pr` - Pull request management (GitHub/Azure DevOps) (prs, comments)
 - `plugin` - Claude Code plugin management (install, uninstall, status)
 
 ## Development Commands
@@ -29,8 +29,8 @@ bun install
 bun run dev --help
 bun run dev jira search "assignee = currentUser()"
 bun run dev jira ticket PROJ-123
-bun run dev ado prs --status active
-bun run dev ado comments 24094 --latest 5
+bun run dev pr prs --status active
+bun run dev pr comments 24094 --latest 5
 
 # Direct execution
 bun run src/cli/index.ts --help
@@ -96,7 +96,7 @@ src/
     commands/
       types.ts            # Command and ServiceRouter interfaces
       jira/               # Jira service commands
-      ado/                # Azure DevOps service commands
+      pr/                # Pull request service commands
       plugin/             # Plugin management commands
   lib/                    # Shared libraries
     config.ts             # Configuration loading from env vars
@@ -104,7 +104,7 @@ src/
     azure-devops-client.ts # Azure DevOps REST API client
     adf-to-md.ts          # Atlassian Document Format to Markdown
     md-to-adf.ts          # Markdown to Atlassian Document Format
-    ado-utils.ts          # Git remote URL parsing
+    ado-utils.ts          # Git remote URL parsing (Azure DevOps-specific utilities)
     cli-utils.ts          # CLI formatting helpers
     comment-utils.ts      # Comment filtering utilities
     embedded-plugin.ts    # Embedded plugin files for installation
@@ -145,10 +145,11 @@ Each command implements the `Command` interface:
 The main entry point (`cli/index.ts`) parses the command line and routes to service routers, which then route to individual commands.
 
 **Auto-Discovery:**
-Azure DevOps commands automatically discover organization, project, and repository from git remote URLs:
+PR commands automatically discover organization, project, and repository from git remote URLs:
 
-- SSH format: `git@ssh.dev.azure.com:v3/{org}/{project}/{repo}`
-- HTTPS format: `https://dev.azure.com/{org}/{project}/_git/{repo}`
+- Azure DevOps SSH: `git@ssh.dev.azure.com:v3/{org}/{project}/{repo}`
+- Azure DevOps HTTPS: `https://dev.azure.com/{org}/{project}/_git/{repo}`
+- GitHub (planned): `git@github.com:{owner}/{repo}.git`
 
 **Multiple Output Formats:**
 All commands support `--format` flag:
@@ -237,7 +238,7 @@ Use API version `7.2-preview.1` for Azure DevOps endpoints. The preview version 
 Commands exit with status code 1 on errors and print user-friendly error messages to stderr. Configuration errors provide specific guidance on missing environment variables.
 
 **Git Remote Detection:**
-Azure DevOps commands use `spawnSync(['git', 'config', '--get', 'remote.origin.url'])` to detect repository context.
+PR commands use `spawnSync(['git', 'config', '--get', 'remote.origin.url'])` to detect repository context and auto-route to the appropriate platform (Azure DevOps, with GitHub support planned).
 
 ## Configuration Requirements
 

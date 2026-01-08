@@ -6,35 +6,31 @@
 import type { CommandModule, ArgumentsCamelCase } from 'yargs';
 import { loadConfig } from '@lib/config.js';
 import { JiraClient } from '@lib/jira-client.js';
-import { validateTicketKey } from '@lib/cli-utils.js';
+import { validateArgs } from '@lib/validation.js';
+import { isValidTicketKeyFormat } from '@schemas/common.js';
 import { convert as markdownToAdf } from '@lib/md-to-adf.js';
+import { DescArgsSchema, type DescArgs } from '@schemas/jira/desc.js';
 
-export interface DescArgv {
-  ticketKey: string;
-  description?: string;
-  file?: string;
-  format: 'text' | 'json' | 'markdown';
-}
-
-async function handler(argv: ArgumentsCamelCase<DescArgv>): Promise<void> {
-  const { ticketKey, format } = argv;
+async function handler(argv: ArgumentsCamelCase<DescArgs>): Promise<void> {
+  const args = validateArgs(DescArgsSchema, argv, 'desc arguments');
+  const { ticketKey, format } = args;
 
   // Get description content from args or file
   let markdownContent: string;
 
-  if (argv.file) {
+  if (args.file) {
     try {
-      const file = Bun.file(argv.file);
+      const file = Bun.file(args.file);
       markdownContent = await file.text();
     } catch (error) {
-      console.error(`Error: Could not read file '${argv.file}'`);
+      console.error(`Error: Could not read file '${args.file}'`);
       if (error instanceof Error) {
         console.error(`Details: ${error.message}`);
       }
       process.exit(1);
     }
-  } else if (argv.description) {
-    markdownContent = argv.description;
+  } else if (args.description) {
+    markdownContent = args.description;
   } else {
     console.error('Error: Description content is required.');
     console.error(
@@ -43,10 +39,11 @@ async function handler(argv: ArgumentsCamelCase<DescArgv>): Promise<void> {
     process.exit(1);
   }
 
-  // Validate ticket key format
-  const validation = validateTicketKey(ticketKey);
-  if (!validation.valid && validation.warning) {
-    console.log(validation.warning);
+  // Validate ticket key format (soft validation with warning)
+  if (!isValidTicketKeyFormat(ticketKey)) {
+    console.log(
+      `Warning: '${ticketKey}' doesn't match typical Jira ticket format (PROJECT-123)`
+    );
     console.log('Proceeding anyway...');
     console.log('');
   }
@@ -97,7 +94,7 @@ async function handler(argv: ArgumentsCamelCase<DescArgv>): Promise<void> {
   }
 }
 
-export const descCommand: CommandModule<object, DescArgv> = {
+export const descCommand: CommandModule<object, DescArgs> = {
   command: 'desc <ticketKey> [description]',
   describe: 'Set or update ticket description',
   builder: {

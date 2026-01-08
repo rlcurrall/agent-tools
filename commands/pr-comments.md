@@ -1,9 +1,9 @@
 ---
-description: Load Azure DevOps PR comments for code review
+description: Load PR comments for code review
 allowed-tools: Bash(aide:*)
 ---
 
-Fetch PR comments from Azure DevOps to review feedback.
+Fetch PR comments to review feedback.
 
 ## Usage
 
@@ -18,7 +18,7 @@ Fetch PR comments from Azure DevOps to review feedback.
 Run the following command with the provided arguments:
 
 ```bash
-aide ado comments $ARGUMENTS
+aide pr comments $ARGUMENTS
 ```
 
 ## Output

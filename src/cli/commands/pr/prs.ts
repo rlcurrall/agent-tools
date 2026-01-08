@@ -1,5 +1,6 @@
 /**
- * ADO prs command - List Azure DevOps pull requests
+ * PR list command - List pull requests
+ * Supports Azure DevOps (with GitHub support planned)
  * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/list?view=azure-devops-rest-7.1
  */
 
@@ -8,19 +9,12 @@ import { loadAzureDevOpsConfig } from '@lib/config.js';
 import { AzureDevOpsClient } from '@lib/azure-devops-client.js';
 import { discoverRepoInfo } from '@lib/ado-utils.js';
 import type { AzureDevOpsPullRequest } from '@lib/types.js';
-
-type OutputFormat = 'text' | 'json' | 'markdown';
-type PRStatus = 'active' | 'completed' | 'abandoned' | 'all';
-
-export interface PrsArgv {
-  project?: string;
-  repo?: string;
-  format: OutputFormat;
-  status: PRStatus;
-  limit: number;
-  createdBy?: string;
-  author?: string;
-}
+import { validateArgs } from '@lib/validation.js';
+import {
+  PrsArgsSchema,
+  type PrsArgs,
+  type OutputFormat,
+} from '@schemas/pr/prs.js';
 
 /**
  * Format PR list output based on format type
@@ -86,10 +80,11 @@ function formatOutput(
   return output;
 }
 
-async function handler(argv: ArgumentsCamelCase<PrsArgv>): Promise<void> {
-  let { project, repo } = argv;
-  const { format, status, limit } = argv;
-  const createdBy = argv.createdBy ?? argv.author;
+async function handler(argv: ArgumentsCamelCase<PrsArgs>): Promise<void> {
+  const args = validateArgs(PrsArgsSchema, argv, 'prs arguments');
+  let { project, repo } = args;
+  const { format, status, limit } = args;
+  const createdBy = args.createdBy ?? args.author;
 
   // Auto-discover from git remote if not specified
   if (!project || !repo) {
@@ -112,7 +107,7 @@ async function handler(argv: ArgumentsCamelCase<PrsArgv>): Promise<void> {
     console.error('');
     console.error('Either:');
     console.error(
-      '  1. Run this command from within a git repository with Azure DevOps remote'
+      '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
     );
     console.error('  2. Specify --project and --repo flags explicitly');
     process.exit(1);
@@ -163,13 +158,13 @@ async function handler(argv: ArgumentsCamelCase<PrsArgv>): Promise<void> {
   }
 }
 
-export const prsCommand: CommandModule<object, PrsArgv> = {
+export const prsCommand: CommandModule<object, PrsArgs> = {
   command: 'prs',
-  describe: 'List Azure DevOps pull requests',
+  describe: 'List pull requests',
   builder: {
     project: {
       type: 'string',
-      describe: 'Azure DevOps project name (auto-discovered from git remote)',
+      describe: 'Project name (auto-discovered from git remote)',
     },
     repo: {
       type: 'string',

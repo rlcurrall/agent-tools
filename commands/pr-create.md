@@ -1,35 +1,39 @@
 ---
-description: Create Azure DevOps pull request
+description: Create pull request
 allowed-tools: Bash(aide:*)
 ---
 
-Create a new pull request in Azure DevOps from the current branch.
+Create a new pull request from the current branch.
 
 ## Usage
 
-`/aide:pr-create --title "Title"` - Create PR with title (uses current branch as source, default target branch)
-`/aide:pr-create --title "Title" --target main` - Create PR targeting specific branch
-`/aide:pr-create --title "Title" --description "Details"` - Create PR with description
+`/aide:pr-create --title "Title"` - Create PR with title (uses current branch as head, default base branch)
+`/aide:pr-create -t "Title" -b "Description"` - Create PR with title and body (gh-style short flags)
+`/aide:pr-create --title "Title" --base main` - Create PR targeting specific base branch
+`/aide:pr-create --title "Title" --body "Details"` - Create PR with body/description
 `/aide:pr-create --title "Title" --draft` - Create PR as draft
-`/aide:pr-create --source feature/xyz --target develop --title "Title"` - Specify both source and target branches
+`/aide:pr-create --head feature/xyz --base develop --title "Title"` - Specify both head and base branches (gh-style)
+`/aide:pr-create --source feature/xyz --target develop --title "Title"` - Specify both branches (az-style, aliases)
 
 ## Execution
 
 Run the following command with the provided arguments:
 
 ```bash
-aide ado create $ARGUMENTS
+aide pr create $ARGUMENTS
 ```
 
 ## Flags
 
-| Flag            | Description                                |
-| --------------- | ------------------------------------------ |
-| `--title`       | PR title (required)                        |
-| `--description` | PR description body                        |
-| `--source`      | Source branch (defaults to current branch) |
-| `--target`      | Target branch (defaults to repo default)   |
-| `--draft`       | Create as draft PR                         |
+Flags follow GitHub CLI (`gh`) conventions with Azure CLI (`az`) compatibility aliases.
+
+| Flag (gh-style)                  | Short | Aliases (az-style)                        | Description                                      |
+| -------------------------------- | ----- | ----------------------------------------- | ------------------------------------------------ |
+| `--title`                        | `-t`  | -                                         | PR title (required)                              |
+| `--body`                         | `-b`  | `--description`                           | PR description/body                              |
+| `--head`                         | `-H`  | `--source`, `-s`, `--source-branch`       | Source/head branch (defaults to current branch)  |
+| `--base`                         | `-B`  | `--target`, `--target-branch`             | Target/base branch (defaults to main)            |
+| `--draft`                        | `-d`  | -                                         | Create as draft PR                               |
 
 ## Output
 

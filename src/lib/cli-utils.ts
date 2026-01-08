@@ -149,19 +149,3 @@ export function formatTicketDetails(issue: JiraIssueResponse): string {
 
   return output.trimEnd();
 }
-
-export function validateTicketKey(ticketKey: string): {
-  valid: boolean;
-  warning?: string;
-} {
-  const ticketPattern = /^[A-Z]+-\d+$/;
-
-  if (!ticketPattern.test(ticketKey)) {
-    return {
-      valid: false,
-      warning: `Warning: '${ticketKey}' doesn't match typical Jira ticket format (PROJECT-123)`,
-    };
-  }
-
-  return { valid: true };
-}

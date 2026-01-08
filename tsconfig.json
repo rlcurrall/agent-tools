@@ -18,7 +18,8 @@
     "baseUrl": ".",
     "paths": {
       "@lib/*": ["src/lib/*"],
-      "@cli/*": ["src/cli/*"]
+      "@cli/*": ["src/cli/*"],
+      "@schemas/*": ["src/schemas/*"]
     },
 
     // Best practices

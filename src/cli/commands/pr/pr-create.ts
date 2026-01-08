@@ -1,5 +1,6 @@
 /**
- * ADO pr create command - Create an Azure DevOps pull request
+ * PR create command - Create a pull request
+ * Supports Azure DevOps (with GitHub support planned)
  * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/create?view=azure-devops-rest-7.2
  */
 
@@ -8,19 +9,12 @@ import { loadAzureDevOpsConfig } from '@lib/config.js';
 import { AzureDevOpsClient } from '@lib/azure-devops-client.js';
 import { discoverRepoInfo, getCurrentBranch } from '@lib/ado-utils.js';
 import type { AzureDevOpsPullRequest, GitRemoteInfo } from '@lib/types.js';
-
-type OutputFormat = 'text' | 'json' | 'markdown';
-
-export interface PrCreateArgv {
-  title: string;
-  description?: string;
-  source?: string;
-  target?: string;
-  draft?: boolean;
-  project?: string;
-  repo?: string;
-  format: OutputFormat;
-}
+import { validateArgs } from '@lib/validation.js';
+import {
+  PrCreateArgsSchema,
+  type PrCreateArgs,
+  type OutputFormat,
+} from '@schemas/pr/pr-create.js';
 
 /**
  * Ensure branch name has refs/heads/ prefix
@@ -86,10 +80,11 @@ function formatOutput(
   return output;
 }
 
-async function handler(argv: ArgumentsCamelCase<PrCreateArgv>): Promise<void> {
-  let { project, repo } = argv;
-  const { title, description, draft, format } = argv;
-  let { source, target } = argv;
+async function handler(argv: ArgumentsCamelCase<PrCreateArgs>): Promise<void> {
+  const args = validateArgs(PrCreateArgsSchema, argv, 'pr-create arguments');
+  let { project, repo } = args;
+  const { title, body, draft, format } = args;
+  let { head, base } = args;
 
   // Auto-discover from git remote if not specified
   let repoInfo: GitRemoteInfo | null = null;
@@ -112,38 +107,38 @@ async function handler(argv: ArgumentsCamelCase<PrCreateArgv>): Promise<void> {
     console.error('');
     console.error('Either:');
     console.error(
-      '  1. Run this command from within a git repository with Azure DevOps remote'
+      '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
     );
     console.error('  2. Specify --project and --repo flags explicitly');
     process.exit(1);
   }
 
   // Auto-detect source branch from current git branch if not specified
-  if (!source) {
+  if (!head) {
     const currentBranch = getCurrentBranch();
     if (currentBranch) {
-      source = currentBranch;
+      head = currentBranch;
       if (format !== 'json') {
-        console.log(`Using current branch as source: ${source}`);
+        console.log(`Using current branch as head: ${head}`);
       }
     } else {
       console.error('Error: Could not detect current branch.');
-      console.error('Please specify --source branch explicitly.');
+      console.error('Please specify --head branch explicitly.');
       process.exit(1);
     }
   }
 
   // Default target to main if not specified
-  if (!target) {
-    target = 'main';
+  if (!base) {
+    base = 'main';
     if (format !== 'json') {
-      console.log(`Using default target branch: ${target}`);
+      console.log(`Using default base branch: ${base}`);
     }
   }
 
   // Ensure branch names have refs/heads/ prefix
-  const sourceRefName = ensureRefPrefix(source);
-  const targetRefName = ensureRefPrefix(target);
+  const sourceRefName = ensureRefPrefix(head);
+  const targetRefName = ensureRefPrefix(base);
 
   if (format !== 'json') {
     console.log('');
@@ -165,7 +160,7 @@ async function handler(argv: ArgumentsCamelCase<PrCreateArgv>): Promise<void> {
       sourceRefName,
       targetRefName,
       title,
-      description || '',
+      body || '',
       {
         isDraft: draft,
       }
@@ -191,9 +186,9 @@ async function handler(argv: ArgumentsCamelCase<PrCreateArgv>): Promise<void> {
   }
 }
 
-export const prCreateCommand: CommandModule<object, PrCreateArgv> = {
+export const prCreateCommand: CommandModule<object, PrCreateArgs> = {
   command: 'create',
-  describe: 'Create an Azure DevOps pull request',
+  describe: 'Create a pull request',
   builder: {
     title: {
       type: 'string',
@@ -201,30 +196,31 @@ export const prCreateCommand: CommandModule<object, PrCreateArgv> = {
       demandOption: true,
       alias: 't',
     },
-    description: {
+    body: {
       type: 'string',
-      describe: 'Pull request description',
-      alias: 'd',
+      describe: 'Pull request description/body',
+      alias: ['b', 'description'],
     },
-    source: {
+    head: {
       type: 'string',
       describe:
-        'Source branch name (auto-detected from current branch if omitted)',
-      alias: 's',
+        'Source/head branch name (auto-detected from current branch if omitted)',
+      alias: ['H', 'source', 's', 'source-branch'],
     },
-    target: {
+    base: {
       type: 'string',
-      describe: 'Target branch name (defaults to main)',
-      alias: 'b',
+      describe: 'Target/base branch name (defaults to main)',
+      alias: ['B', 'target', 'target-branch'],
     },
     draft: {
       type: 'boolean',
       default: false,
       describe: 'Create as draft pull request',
+      alias: 'd',
     },
     project: {
       type: 'string',
-      describe: 'Azure DevOps project name (auto-discovered from git remote)',
+      describe: 'Project name (auto-discovered from git remote)',
     },
     repo: {
       type: 'string',

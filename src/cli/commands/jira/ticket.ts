@@ -6,20 +6,20 @@
 import type { CommandModule, ArgumentsCamelCase } from 'yargs';
 import { loadConfig } from '@lib/config.js';
 import { JiraClient } from '@lib/jira-client.js';
-import { formatTicketDetails, validateTicketKey } from '@lib/cli-utils.js';
+import { formatTicketDetails } from '@lib/cli-utils.js';
+import { validateArgs } from '@lib/validation.js';
+import { isValidTicketKeyFormat } from '@schemas/common.js';
+import { TicketArgsSchema, type TicketArgs } from '@schemas/jira/ticket.js';
 
-export interface TicketArgv {
-  ticketKey: string;
-  format: 'text' | 'json' | 'markdown';
-}
+async function handler(argv: ArgumentsCamelCase<TicketArgs>): Promise<void> {
+  const args = validateArgs(TicketArgsSchema, argv, 'ticket arguments');
+  const { ticketKey, format } = args;
 
-async function handler(argv: ArgumentsCamelCase<TicketArgv>): Promise<void> {
-  const { ticketKey, format } = argv;
-
-  // Validate ticket key format
-  const validation = validateTicketKey(ticketKey);
-  if (!validation.valid && validation.warning) {
-    console.log(validation.warning);
+  // Validate ticket key format (soft validation with warning)
+  if (!isValidTicketKeyFormat(ticketKey)) {
+    console.log(
+      `Warning: '${ticketKey}' doesn't match typical Jira ticket format (PROJECT-123)`
+    );
     console.log('Proceeding anyway...');
     console.log('');
   }
@@ -51,7 +51,7 @@ async function handler(argv: ArgumentsCamelCase<TicketArgv>): Promise<void> {
   }
 }
 
-export const ticketCommand: CommandModule<object, TicketArgv> = {
+export const ticketCommand: CommandModule<object, TicketArgs> = {
   command: 'ticket <ticketKey>',
   describe: 'Get ticket details (summary, description, metadata)',
   builder: {

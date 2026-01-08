@@ -1,5 +1,6 @@
 /**
- * ADO pr comment command - Post a comment on a pull request
+ * PR comment command - Post a comment on a pull request
+ * Supports Azure DevOps (with GitHub support planned)
  * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-threads/create?view=azure-devops-rest-7.1
  */
 
@@ -13,19 +14,12 @@ import {
   findPRByCurrentBranch,
 } from '@lib/ado-utils.js';
 import type { CreateThreadResponse } from '@lib/types.js';
-
-type OutputFormat = 'text' | 'json' | 'markdown';
-
-export interface PrCommentArgv {
-  pr?: string;
-  comment: string;
-  project?: string;
-  repo?: string;
-  format: OutputFormat;
-  file?: string;
-  line?: number;
-  endLine?: number;
-}
+import { validateArgs } from '@lib/validation.js';
+import {
+  PrCommentArgsSchema,
+  type PrCommentArgs,
+  type OutputFormat,
+} from '@schemas/pr/pr-comment.js';
 
 /**
  * Format the output based on format type
@@ -90,10 +84,11 @@ function formatOutput(
   return output;
 }
 
-async function handler(argv: ArgumentsCamelCase<PrCommentArgv>): Promise<void> {
+async function handler(argv: ArgumentsCamelCase<PrCommentArgs>): Promise<void> {
+  const args = validateArgs(PrCommentArgsSchema, argv, 'pr-comment arguments');
   let prId: number | undefined;
-  let { project, repo } = argv;
-  const { format, comment, file, line, endLine } = argv;
+  let { project, repo } = args;
+  const { format, comment, file, line, endLine } = args;
 
   // Validate file/line requirements
   if (file && !line) {
@@ -133,11 +128,11 @@ async function handler(argv: ArgumentsCamelCase<PrCommentArgv>): Promise<void> {
   }
 
   // Parse PR ID or URL, or auto-detect from current branch
-  if (argv.pr) {
-    if (argv.pr.startsWith('http')) {
-      const parsed = parsePRUrl(argv.pr);
+  if (args.pr) {
+    if (args.pr.startsWith('http')) {
+      const parsed = parsePRUrl(args.pr);
       if (!parsed) {
-        console.error(`Error: Invalid Azure DevOps PR URL: ${argv.pr}`);
+        console.error(`Error: Invalid PR URL (expected Azure DevOps format): ${args.pr}`);
         console.error(
           'Expected format: https://dev.azure.com/{org}/{project}/_git/{repo}/pullrequest/{id}'
         );
@@ -148,12 +143,12 @@ async function handler(argv: ArgumentsCamelCase<PrCommentArgv>): Promise<void> {
       project = parsed.project;
       repo = parsed.repo;
     } else {
-      const validation = validatePRId(argv.pr);
+      const validation = validatePRId(args.pr);
       if (validation.valid) {
         prId = validation.value;
       } else {
         console.error(
-          `Error: Could not parse '${argv.pr}' as a PR ID. Expected a positive number or full PR URL.`
+          `Error: Could not parse '${args.pr}' as a PR ID. Expected a positive number or full PR URL.`
         );
         process.exit(1);
       }
@@ -166,7 +161,7 @@ async function handler(argv: ArgumentsCamelCase<PrCommentArgv>): Promise<void> {
       console.error('');
       console.error('Either:');
       console.error(
-        '  1. Run this command from within a git repository with Azure DevOps remote'
+        '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
       );
       console.error('  2. Specify --project and --repo flags explicitly');
       console.error('  3. Provide a PR ID or full PR URL');
@@ -197,7 +192,7 @@ async function handler(argv: ArgumentsCamelCase<PrCommentArgv>): Promise<void> {
     console.error('');
     console.error('Either:');
     console.error(
-      '  1. Run this command from within a git repository with Azure DevOps remote'
+      '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
     );
     console.error('  2. Specify --project and --repo flags explicitly');
     console.error('  3. Provide a full PR URL');
@@ -254,9 +249,9 @@ async function handler(argv: ArgumentsCamelCase<PrCommentArgv>): Promise<void> {
   }
 }
 
-export const prCommentCommand: CommandModule<object, PrCommentArgv> = {
+export const prCommentCommand: CommandModule<object, PrCommentArgs> = {
   command: 'comment <comment>',
-  describe: 'Post a comment on an Azure DevOps pull request',
+  describe: 'Post a comment on a pull request',
   builder: (yargs: Argv) =>
     yargs
       .positional('comment', {
@@ -273,7 +268,7 @@ export const prCommentCommand: CommandModule<object, PrCommentArgv> = {
       })
       .option('project', {
         type: 'string',
-        describe: 'Azure DevOps project name (auto-discovered from git remote)',
+        describe: 'Project name (auto-discovered from git remote)',
       })
       .option('repo', {
         type: 'string',
@@ -296,6 +291,6 @@ export const prCommentCommand: CommandModule<object, PrCommentArgv> = {
       .option('end-line', {
         type: 'number',
         describe: 'End line number for multi-line comment range',
-      }) as Argv<PrCommentArgv>,
+      }) as Argv<PrCommentArgs>,
   handler,
 };

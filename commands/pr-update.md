@@ -1,9 +1,9 @@
 ---
-description: Update Azure DevOps pull request
+description: Update pull request
 allowed-tools: Bash(aide:*)
 ---
 
-Update an existing pull request in Azure DevOps.
+Update an existing pull request.
 
 ## Usage
 
@@ -20,7 +20,7 @@ Update an existing pull request in Azure DevOps.
 Run the following command with the provided arguments:
 
 ```bash
-aide ado update $ARGUMENTS
+aide pr update $ARGUMENTS
 ```
 
 ## Flags

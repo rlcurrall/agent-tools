@@ -1,9 +1,9 @@
 ---
-description: Post comment on Azure DevOps PR
+description: Post comment on PR
 allowed-tools: Bash(aide:*)
 ---
 
-Post a comment on an Azure DevOps pull request thread.
+Post a comment on a pull request thread.
 
 ## Usage
 
@@ -16,16 +16,16 @@ Post a comment on an Azure DevOps pull request thread.
 Run the following command with the provided arguments:
 
 ```bash
-aide ado comment $ARGUMENTS
+aide pr comment $ARGUMENTS
 ```
 
 ## Flags
 
-| Flag     | Description                                          |
-| -------- | ---------------------------------------------------- |
-| `--pr`   | PR ID or URL (auto-detected from branch if omitted)  |
-| `--file` | File path to attach comment to                       |
-| `--line` | Line number in file (requires `--file`)              |
+| Flag     | Description                                         |
+| -------- | --------------------------------------------------- |
+| `--pr`   | PR ID or URL (auto-detected from branch if omitted) |
+| `--file` | File path to attach comment to                      |
+| `--line` | Line number in file (requires `--file`)             |
 
 ## Output
 
@@ -49,11 +49,11 @@ Use comments to:
 
 ```bash
 # General PR comment (auto-detect PR from branch)
-aide ado comment "Ready for re-review after addressing all feedback"
+aide pr comment "Ready for re-review after addressing all feedback"
 
 # Comment on specific PR
-aide ado comment "LGTM!" --pr 24094
+aide pr comment "LGTM!" --pr 24094
 
 # Comment on specific line
-aide ado comment "Added null check as suggested" --pr 24094 --file src/utils/helpers.ts --line 127
+aide pr comment "Added null check as suggested" --pr 24094 --file src/utils/helpers.ts --line 127
 ```

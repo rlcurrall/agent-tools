@@ -7,29 +7,26 @@ import type { CommandModule, ArgumentsCamelCase } from 'yargs';
 import { loadConfig } from '@lib/config.js';
 import { JiraClient } from '@lib/jira-client.js';
 import { formatSearchResults } from '@lib/cli-utils.js';
+import { validateArgs } from '@lib/validation.js';
+import { SearchArgsSchema, type SearchArgs } from '@schemas/jira/search.js';
 
-export interface SearchArgv {
-  query: string;
-  maxResults?: number;
-  limit?: number;
-  format: 'text' | 'json' | 'markdown';
-}
-
-async function handler(argv: ArgumentsCamelCase<SearchArgv>): Promise<void> {
-  const maxResults = argv.maxResults ?? argv.limit ?? 50;
-  const format = argv.format;
+async function handler(argv: ArgumentsCamelCase<SearchArgs>): Promise<void> {
+  // Validate arguments with Valibot schema
+  const validated = validateArgs(SearchArgsSchema, argv, 'search arguments');
+  const maxResults = validated.maxResults ?? validated.limit ?? 50;
+  const format = validated.format;
 
   try {
     const config = loadConfig();
     const client = new JiraClient(config);
 
     if (format !== 'json') {
-      console.log(`Searching Jira for: ${argv.query}`);
+      console.log(`Searching Jira for: ${validated.query}`);
       console.log(`Max results: ${maxResults}`);
       console.log('');
     }
 
-    const response = await client.searchIssues(argv.query, maxResults);
+    const response = await client.searchIssues(validated.query, maxResults);
 
     if (format === 'json') {
       console.log(JSON.stringify(response, null, 2));
@@ -47,7 +44,7 @@ async function handler(argv: ArgumentsCamelCase<SearchArgv>): Promise<void> {
   }
 }
 
-export const searchCommand: CommandModule<object, SearchArgv> = {
+export const searchCommand: CommandModule<object, SearchArgs> = {
   command: 'search <query> [maxResults]',
   describe: 'Search Jira tickets using JQL',
   builder: {
