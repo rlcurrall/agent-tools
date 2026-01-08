@@ -81,13 +81,30 @@ function convertNode(
       const rows = content.map((child) => convertNode(child, warnings));
       if (rows.length === 0) return '';
 
-      // Add table header separator
-      const headerRow = rows[0];
-      if (!headerRow) return '';
-      const columnCount = (headerRow.match(/\|/g) || []).length - 1;
-      const separator = '|' + ':-:|'.repeat(columnCount);
+      // Get the first row to determine column count
+      const firstRow = rows[0];
+      if (!firstRow) return '';
 
-      return [headerRow, separator, ...rows.slice(1)].join('\n');
+      // Count columns from pipe characters (subtract 1 because of leading/trailing pipes)
+      const columnCount = (firstRow.match(/\|/g) || []).length - 1;
+
+      // Create separator row with proper alignment markers
+      const separatorCells = Array(columnCount).fill('---');
+      const separator = `|${separatorCells.join('|')}|`;
+
+      let tableMarkdown: string;
+
+      // If there's only one row, create an empty header so the content shows as data
+      if (rows.length === 1) {
+        const emptyHeader = `|${Array(columnCount).fill(' ').join('|')}|`;
+        tableMarkdown = [emptyHeader, separator, firstRow].join('\n');
+      } else {
+        // Treat first row as header, rest as data
+        tableMarkdown = [firstRow, separator, ...rows.slice(1)].join('\n');
+      }
+
+      // Add blank lines before and after table for proper markdown parsing
+      return `\n${tableMarkdown}\n`;
 
     case 'tableRow':
       const cells = content.map((child) => convertNode(child, warnings));
@@ -116,6 +133,7 @@ function convertNode(
       return `- [${isChecked ? 'x' : ' '}] ${taskContent}`;
 
     case 'mediaGroup':
+    case 'mediaSingle':
     case 'media':
       // Media nodes are complex - just return a placeholder
       addWarning(
@@ -197,6 +215,79 @@ function addWarning(
   }
 }
 
+/**
+ * Pre-process ADF to fix common Jira quirks:
+ * - Language paragraphs before codeBlocks (e.g., <p>bash</p> followed by <codeBlock>)
+ */
+function preprocessAdf(node: AdfNode): AdfNode {
+  if (!node.content || node.content.length === 0) {
+    return node;
+  }
+
+  const newContent: AdfNode[] = [];
+  const commonLanguages = [
+    'bash',
+    'json',
+    'javascript',
+    'typescript',
+    'python',
+    'java',
+    'csharp',
+    'c#',
+    'sql',
+    'xml',
+    'html',
+    'css',
+    'yaml',
+    'yml',
+    'shell',
+    'powershell',
+    'go',
+    'rust',
+    'ruby',
+    'php',
+  ];
+
+  for (let i = 0; i < node.content.length; i++) {
+    const current = node.content.at(i);
+    const next = node.content.at(i + 1);
+
+    if (!current) continue;
+
+    // Check if current is a paragraph with only a language name and next is a codeBlock
+    if (
+      current.type === 'paragraph' &&
+      current.content?.length === 1 &&
+      current.content[0]!.type === 'text' &&
+      next?.type === 'codeBlock'
+    ) {
+      const text = current.content[0]!.text?.toLowerCase().trim() || '';
+
+      if (commonLanguages.includes(text)) {
+        // Skip this paragraph and add language to next codeBlock
+        const enhancedCodeBlock = {
+          ...next,
+          attrs: {
+            ...next.attrs,
+            language: text === 'c#' ? 'csharp' : text,
+          },
+        };
+        newContent.push(preprocessAdf(enhancedCodeBlock));
+        i++; // Skip next iteration since we processed it
+        continue;
+      }
+    }
+
+    // Recursively process child nodes
+    newContent.push(preprocessAdf(current));
+  }
+
+  return {
+    ...node,
+    content: newContent,
+  };
+}
+
 function validateInput(adf: AdfInput): asserts adf is AdfNode {
   if (!adf || typeof adf !== 'object') {
     throw new Error('Input must be a valid ADF object');
@@ -212,7 +303,8 @@ export function convert(adf: AdfInput): ConversionResult {
 
   try {
     validateInput(adf);
-    const result = convertNode(adf, warnings);
+    const preprocessed = preprocessAdf(adf);
+    const result = convertNode(preprocessed, warnings);
 
     return {
       result: result.trim(),
