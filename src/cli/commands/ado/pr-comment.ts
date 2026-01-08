@@ -255,7 +255,7 @@ async function handler(argv: ArgumentsCamelCase<PrCommentArgv>): Promise<void> {
 }
 
 export const prCommentCommand: CommandModule<object, PrCommentArgv> = {
-  command: 'comment [prIdOrUrl] <comment>',
+  command: 'comment <prIdOrUrl> <comment>',
   describe: 'Post a comment on an Azure DevOps pull request',
   builder: (yargs: Argv) =>
     yargs
