@@ -17,7 +17,7 @@ import type { AzureDevOpsCreateCommentResponse } from '@lib/types.js';
 type OutputFormat = 'text' | 'json' | 'markdown';
 
 export interface PrReplyArgv {
-  prIdOrUrl?: string;
+  pr?: string;
   replyText: string;
   thread: number;
   parent?: number;
@@ -98,11 +98,11 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
   }
 
   // Parse PR ID or URL, or auto-detect from current branch
-  if (argv.prIdOrUrl) {
-    if (argv.prIdOrUrl.startsWith('http')) {
-      const parsed = parsePRUrl(argv.prIdOrUrl);
+  if (argv.pr) {
+    if (argv.pr.startsWith('http')) {
+      const parsed = parsePRUrl(argv.pr);
       if (!parsed) {
-        console.error(`Error: Invalid Azure DevOps PR URL: ${argv.prIdOrUrl}`);
+        console.error(`Error: Invalid Azure DevOps PR URL: ${argv.pr}`);
         console.error(
           'Expected format: https://dev.azure.com/{org}/{project}/_git/{repo}/pullrequest/{id}'
         );
@@ -113,12 +113,12 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
       project = parsed.project;
       repo = parsed.repo;
     } else {
-      const validation = validatePRId(argv.prIdOrUrl);
+      const validation = validatePRId(argv.pr);
       if (validation.valid) {
         prId = validation.value;
       } else {
         console.error(
-          `Error: Could not parse '${argv.prIdOrUrl}' as a PR ID. Expected a positive number or full PR URL.`
+          `Error: Could not parse '${argv.pr}' as a PR ID. Expected a positive number or full PR URL.`
         );
         process.exit(1);
       }
@@ -234,20 +234,20 @@ async function handler(argv: ArgumentsCamelCase<PrReplyArgv>): Promise<void> {
 }
 
 export const prReplyCommand: CommandModule<object, PrReplyArgv> = {
-  command: 'reply <prIdOrUrl> <replyText>',
+  command: 'reply <replyText>',
   describe: 'Reply to a comment thread on an Azure DevOps pull request',
   builder: (yargs: Argv) =>
     yargs
-      .positional('prIdOrUrl', {
-        type: 'string',
-        describe:
-          'PR ID or full PR URL (auto-detected from current branch if omitted)',
-        coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
-      })
       .positional('replyText', {
         type: 'string',
         describe: 'The reply text content',
         demandOption: true,
+        coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
+      })
+      .option('pr', {
+        type: 'string',
+        describe:
+          'PR ID or full PR URL (auto-detected from current branch if omitted)',
         coerce: (val: unknown) => (val !== undefined ? String(val) : undefined),
       })
       .option('thread', {

@@ -7,9 +7,9 @@ Post a comment on an Azure DevOps pull request thread.
 
 ## Usage
 
-`/aide:pr-comment <pr-id> "comment text"` - Add general PR comment
-`/aide:pr-comment <pr-id> "comment" --file src/app.ts --line 42` - Comment on a specific file/line
 `/aide:pr-comment "comment text"` - Auto-detect PR from current branch
+`/aide:pr-comment "comment text" --pr <id>` - Comment on specific PR
+`/aide:pr-comment "comment" --file src/app.ts --line 42` - Comment on a specific file/line
 
 ## Execution
 
@@ -21,10 +21,11 @@ aide ado comment $ARGUMENTS
 
 ## Flags
 
-| Flag     | Description                             |
-| -------- | --------------------------------------- |
-| `--file` | File path to attach comment to          |
-| `--line` | Line number in file (requires `--file`) |
+| Flag     | Description                                          |
+| -------- | ---------------------------------------------------- |
+| `--pr`   | PR ID or URL (auto-detected from branch if omitted)  |
+| `--file` | File path to attach comment to                       |
+| `--line` | Line number in file (requires `--file`)              |
 
 ## Output
 
@@ -47,9 +48,12 @@ Use comments to:
 ## Examples
 
 ```bash
-# General PR comment
-aide ado comment 24094 "Ready for re-review after addressing all feedback"
+# General PR comment (auto-detect PR from branch)
+aide ado comment "Ready for re-review after addressing all feedback"
+
+# Comment on specific PR
+aide ado comment "LGTM!" --pr 24094
 
 # Comment on specific line
-aide ado comment 24094 "Added null check as suggested" --file src/utils/helpers.ts --line 127
+aide ado comment "Added null check as suggested" --pr 24094 --file src/utils/helpers.ts --line 127
 ```

@@ -7,9 +7,9 @@ Reply to an existing comment thread on an Azure DevOps pull request.
 
 ## Usage
 
-`/aide:pr-reply <pr-id> --thread <thread-id> "reply text"` - Reply to a thread
-`/aide:pr-reply <pr-id> --thread <thread-id> --parent <comment-id> "reply"` - Reply to specific comment in thread
-`/aide:pr-reply --thread <thread-id> "reply text"` - Auto-detect PR from current branch
+`/aide:pr-reply "reply text" --thread <thread-id>` - Auto-detect PR, reply to thread
+`/aide:pr-reply "reply text" --thread <thread-id> --pr <pr-id>` - Reply to specific PR's thread
+`/aide:pr-reply "reply" --thread <thread-id> --parent <comment-id>` - Reply to specific comment in thread
 
 ## Execution
 
@@ -21,10 +21,11 @@ aide ado reply $ARGUMENTS
 
 ## Flags
 
-| Flag       | Description                          |
-| ---------- | ------------------------------------ |
-| `--thread` | Thread ID to reply to (required)     |
-| `--parent` | Parent comment ID for nested replies |
+| Flag       | Description                                         |
+| ---------- | --------------------------------------------------- |
+| `--thread` | Thread ID to reply to (required)                    |
+| `--pr`     | PR ID or URL (auto-detected from branch if omitted) |
+| `--parent` | Parent comment ID for nested replies                |
 
 ## Output
 
@@ -47,16 +48,16 @@ Use replies to:
 ## Examples
 
 ```bash
-# Reply to a thread
-aide ado reply 24094 --thread 156 "Fixed as suggested in the latest commit"
+# Reply to a thread (auto-detect PR from branch)
+aide ado reply "Fixed as suggested in the latest commit" --thread 156
+
+# Reply to specific PR's thread
+aide ado reply "Done, please re-review" --thread 156 --pr 24094
 
 # Reply to specific comment in a thread
-aide ado reply 24094 --thread 156 --parent 789 "Good point, I've updated the implementation"
-
-# Auto-detect PR from current branch
-aide ado reply --thread 156 "Done, please re-review"
+aide ado reply "Good point, I've updated the implementation" --thread 156 --parent 789 --pr 24094
 ```
 
 ## Finding Thread IDs
 
-Use `/aide:pr <pr-id>` to load PR comments, which displays thread IDs for each comment thread. Look for the thread ID in the output to use with this command.
+Use `/aide:pr-comments` to load PR comments, which displays thread IDs for each comment thread. Look for the thread ID in the output to use with this command.
