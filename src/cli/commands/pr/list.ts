@@ -11,8 +11,8 @@ import { discoverRepoInfo } from '@lib/ado-utils.js';
 import type { AzureDevOpsPullRequest } from '@lib/types.js';
 import { validateArgs } from '@lib/validation.js';
 import {
-  PrsArgsSchema,
-  type PrsArgs,
+  ListArgsSchema,
+  type ListArgs,
   type OutputFormat,
 } from '@schemas/pr/list.js';
 
@@ -80,8 +80,8 @@ function formatOutput(
   return output;
 }
 
-async function handler(argv: ArgumentsCamelCase<PrsArgs>): Promise<void> {
-  const args = validateArgs(PrsArgsSchema, argv, 'list arguments');
+async function handler(argv: ArgumentsCamelCase<ListArgs>): Promise<void> {
+  const args = validateArgs(ListArgsSchema, argv, 'list arguments');
   let { project, repo } = args;
   const { format, status, limit } = args;
   const createdBy = args.createdBy ?? args.author;
@@ -158,7 +158,7 @@ async function handler(argv: ArgumentsCamelCase<PrsArgs>): Promise<void> {
   }
 }
 
-export const listCommand: CommandModule<object, PrsArgs> = {
+export const listCommand: CommandModule<object, ListArgs> = {
   command: 'list',
   describe: 'List pull requests',
   builder: {

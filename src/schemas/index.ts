@@ -66,8 +66,8 @@ export { DescArgsSchema, type DescArgs } from './jira/desc.js';
 export {
   PrStatusSchema,
   type PrStatus,
-  PrsArgsSchema,
-  type PrsArgs,
+  ListArgsSchema,
+  type ListArgs,
 } from './pr/list.js';
 
 export {
