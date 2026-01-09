@@ -107,7 +107,7 @@ function main() {
   console.log(`\n✅ Release v${newVersion} complete!`);
   console.log(`\n🔗 GitHub Actions will build and publish the release at:`);
   console.log(
-    `   https://github.com/your-org/aide/releases/tag/v${newVersion}\n`
+    `   https://github.com/rlcurrall/aide/releases/tag/v${newVersion}\n`
   );
 }
 
