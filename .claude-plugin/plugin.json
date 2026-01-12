@@ -8,5 +8,29 @@
   },
   "license": "MIT",
   "homepage": "https://github.com/rlcurrall/aide",
-  "repository": "https://github.com/rlcurrall/aide"
+  "repository": "https://github.com/rlcurrall/aide",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "aide prime"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "aide prime"
+          }
+        ]
+      }
+    ]
+  }
 }
