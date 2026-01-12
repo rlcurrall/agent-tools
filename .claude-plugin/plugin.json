@@ -8,45 +8,5 @@
   },
   "license": "MIT",
   "homepage": "https://github.com/rlcurrall/aide",
-  "repository": "https://github.com/rlcurrall/aide",
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "aide prime"
-          }
-        ]
-      },
-      {
-        "matcher": "resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "aide prime"
-          }
-        ]
-      },
-      {
-        "matcher": "clear",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "aide prime"
-          }
-        ]
-      },
-      {
-        "matcher": "compact",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "aide prime"
-          }
-        ]
-      }
-    ]
-  }
+  "repository": "https://github.com/rlcurrall/aide"
 }
