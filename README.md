@@ -120,6 +120,7 @@ aide <service> <action> [options]
 | Command                                  | Description                    |
 | ---------------------------------------- | ------------------------------ |
 | `aide pr list`                            | List pull requests             |
+| `aide pr view [--pr ID]`                 | View pull request details      |
 | `aide pr create`                         | Create a pull request          |
 | `aide pr update [--pr ID]`               | Update a pull request          |
 | `aide pr comments [--pr ID]`             | Get PR comments                |
@@ -158,6 +159,10 @@ aide pr list
 # List PRs with filters
 aide pr list --status completed --limit 10
 aide pr list --created-by "your.email@company.com"
+
+# View PR details (--pr optional, auto-detects from current branch)
+aide pr view --pr 24094
+aide pr view  # auto-detect PR from branch
 
 # Get PR comments (--pr optional, auto-detects from current branch)
 aide pr comments --pr 24094
@@ -313,6 +318,7 @@ After installation, these commands are available in Claude Code:
 
 | Command                            | Description                 |
 | ---------------------------------- | --------------------------- |
+| `/aide:pr-view --pr ID`            | View PR details             |
 | `/aide:pr-comments --pr ID`        | Get PR comments             |
 | `/aide:pr-comment "text" --pr ID`  | Post comment on PR          |
 | `/aide:pr-create --title "..." `   | Create a pull request       |
@@ -329,9 +335,10 @@ After installation, these commands are available in Claude Code:
 
 **PR Review:**
 
-1. `/aide:pr-comments --pr 24094 --thread-status active` - Load active feedback
-2. Address each comment
-3. Push changes
+1. `/aide:pr-view --pr 24094` - View PR details
+2. `/aide:pr-comments --pr 24094 --thread-status active` - Load active feedback
+3. Address each comment
+4. Push changes
 
 ## License
 

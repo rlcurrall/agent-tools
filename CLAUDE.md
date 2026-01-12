@@ -11,7 +11,7 @@ The CLI follows a hierarchical command structure: `aide <service> <action> [opti
 **Services:**
 
 - `jira` - Jira ticket management (search, ticket, comment, comments, desc)
-- `pr` - Pull request management (list, create, update, comments, comment, reply)
+- `pr` - Pull request management (list, view, create, update, comments, comment, reply)
 - `plugin` - Claude Code plugin management (install, uninstall, status)
 
 **Top-level Commands:**
@@ -117,10 +117,15 @@ src/
 
 commands/                 # Claude Code slash commands (for plugin)
   ticket.md               # /aide:ticket - Load Jira ticket context
-  search.md               # /aide:search - Search Jira tickets
-  comment.md              # /aide:comment - Add comment to ticket
-  update.md               # /aide:update - Update ticket description
-  pr.md                   # /aide:pr - Load PR comments for review
+  ticket-search.md        # /aide:ticket-search - Search Jira tickets
+  ticket-comment.md       # /aide:ticket-comment - Add comment to ticket
+  ticket-update.md        # /aide:ticket-update - Update ticket description
+  pr-view.md              # /aide:pr-view - View PR details
+  pr-comments.md          # /aide:pr-comments - Get PR comments
+  pr-comment.md           # /aide:pr-comment - Post comment on PR
+  pr-create.md            # /aide:pr-create - Create a PR
+  pr-update.md            # /aide:pr-update - Update a PR
+  pr-reply.md             # /aide:pr-reply - Reply to PR thread
 
 skills/aide/SKILL.md      # Claude Code skill definition
 

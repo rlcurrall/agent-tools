@@ -93,6 +93,10 @@ Note: \`--pr\` flag is optional - auto-discovers from current branch if omitted.
 # List active PRs
 aide pr list --status active
 
+# View PR details
+aide pr view --pr 123
+aide pr view  # auto-detect from branch
+
 # Get PR comments (with explicit PR ID)
 aide pr comments --pr 24094 --latest 10
 aide pr comments --latest 10  # auto-detect from branch

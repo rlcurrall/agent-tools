@@ -28,6 +28,7 @@ The aide CLI provides AI coding agents with tools to interact with Jira and Azur
 | Command                            | Description        |
 | ---------------------------------- | ------------------ |
 | `aide pr list`                     | List pull requests |
+| `aide pr view [--pr ID]`          | View PR details    |
 | `aide pr create`                  | Create a PR        |
 | `aide pr update [--pr ID]`        | Update a PR        |
 | `aide pr comments [--pr ID]`      | Get PR comments    |
@@ -59,12 +60,13 @@ The aide CLI provides AI coding agents with tools to interact with Jira and Azur
 
 ## PR Review Workflow
 
-### Loading PR Feedback
+### Loading PR Context
 
-1. **Fetch comments**: Use `aide pr comments --pr PR-ID` to load all PR comments
-2. **Filter active threads**: Use `--thread-status active` to focus on unresolved feedback
-3. **Get latest**: Use `--latest N` to see most recent comments
-4. **Filter by reviewer**: Use `--author "email"` to see specific reviewer feedback
+1. **View PR details**: Use `aide pr view --pr PR-ID` to see title, description, status, and branches
+2. **Fetch comments**: Use `aide pr comments --pr PR-ID` to load all PR comments
+3. **Filter active threads**: Use `--thread-status active` to focus on unresolved feedback
+4. **Get latest**: Use `--latest N` to see most recent comments
+5. **Filter by reviewer**: Use `--author "email"` to see specific reviewer feedback
 
 ### Addressing Feedback
 
@@ -76,6 +78,12 @@ The aide CLI provides AI coding agents with tools to interact with Jira and Azur
 ### Common Patterns
 
 ```bash
+# View PR details (auto-detect from branch)
+aide pr view
+
+# View specific PR
+aide pr view --pr 24094
+
 # Get active PR feedback
 aide pr comments --pr 24094 --thread-status active
 
@@ -309,6 +317,9 @@ aide jira comment PROJ-123 "Technical note: Using OAuth 2.0 with PKCE flow for e
 ### Review and Address PR Feedback
 
 ```bash
+# View PR details first
+aide pr view --pr 24094
+
 # Get all active feedback
 aide pr comments --pr 24094 --thread-status active
 
