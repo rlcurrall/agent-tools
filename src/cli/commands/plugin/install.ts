@@ -8,6 +8,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { homedir } from 'os';
 import { dirname, join } from 'path';
 import type { ArgumentsCamelCase, CommandModule } from 'yargs';
+import { handleCommandError } from '@lib/errors.js';
 
 type Scope = 'user' | 'project' | 'local';
 
@@ -84,7 +85,7 @@ function updateSettings(settingsFile: string, pluginDir: string): void {
     },
   };
 
-  // Enable the ax plugin from our local marketplace
+  // Enable the aide plugin from our local marketplace
   // Format: "plugin-name@marketplace-name"
   if (!settings.enabledPlugins || typeof settings.enabledPlugins !== 'object') {
     settings.enabledPlugins = {};
@@ -149,14 +150,11 @@ async function handler(argv: ArgumentsCamelCase<InstallArgv>): Promise<void> {
     console.log('  /aide:search "JQL"   - Search Jira tickets');
     console.log('  /aide:pr PR-ID       - Load PR comments');
   } catch (error) {
-    console.error(
-      `Installation failed: ${error instanceof Error ? error.message : error}`
-    );
-    process.exit(1);
+    handleCommandError(error);
   }
 }
 
-export const installCommand: CommandModule<object, InstallArgv> = {
+export default {
   command: 'install',
   describe: 'Install the aide plugin to Claude Code',
   builder: {
@@ -182,4 +180,4 @@ export const installCommand: CommandModule<object, InstallArgv> = {
     },
   },
   handler,
-};
+} satisfies CommandModule<object, InstallArgv>;

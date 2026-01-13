@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 /**
- * Main entry point for the ax CLI
+ * Main entry point for the aide CLI
  * Uses yargs for command parsing and routing
  */
 

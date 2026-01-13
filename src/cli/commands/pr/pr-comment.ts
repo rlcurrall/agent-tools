@@ -4,11 +4,12 @@
  * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-threads/create?view=azure-devops-rest-7.1
  */
 
-import type { CommandModule, ArgumentsCamelCase, Argv } from 'yargs';
+import type { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { loadAzureDevOpsConfig } from '@lib/config.js';
 import { AzureDevOpsClient } from '@lib/azure-devops-client.js';
 import {
-  discoverRepoInfo,
+  resolveRepoContext,
+  printMissingRepoError,
   parsePRUrl,
   validatePRId,
   findPRByCurrentBranch,
@@ -20,6 +21,7 @@ import {
   type PrCommentArgs,
   type OutputFormat,
 } from '@schemas/pr/pr-comment.js';
+import { handleCommandError } from '@lib/errors.js';
 
 /**
  * Format the output based on format type
@@ -87,7 +89,8 @@ function formatOutput(
 async function handler(argv: ArgumentsCamelCase<PrCommentArgs>): Promise<void> {
   const args = validateArgs(PrCommentArgsSchema, argv, 'pr-comment arguments');
   let prId: number | undefined;
-  let { project, repo } = args;
+  let project: string | undefined = args.project;
+  let repo: string | undefined = args.repo;
   const { format, comment, file, line, endLine } = args;
 
   // Validate file/line requirements
@@ -112,19 +115,13 @@ async function handler(argv: ArgumentsCamelCase<PrCommentArgs>): Promise<void> {
     process.exit(1);
   }
 
-  // Auto-discover project/repo from git remote first (needed for PR auto-detection)
-  if (!project || !repo) {
-    const discovered = discoverRepoInfo();
-    if (discovered) {
-      project = project || discovered.project;
-      repo = repo || discovered.repo;
-      if (format !== 'json') {
-        console.log(
-          `Auto-discovered: ${discovered.org}/${discovered.project}/${discovered.repo}`
-        );
-        console.log('');
-      }
-    }
+  // Try auto-discover project/repo from git remote first (needed for PR auto-detection)
+  try {
+    const context = resolveRepoContext(project, repo, { format });
+    project = context.project;
+    repo = context.repo;
+  } catch {
+    // May still succeed if PR URL is provided
   }
 
   // Parse PR ID or URL, or auto-detect from current branch
@@ -159,14 +156,7 @@ async function handler(argv: ArgumentsCamelCase<PrCommentArgs>): Promise<void> {
     // No PR ID provided - auto-detect from current branch
     // We need project/repo for this
     if (!project || !repo) {
-      console.error('Error: Could not determine project and repository.');
-      console.error('');
-      console.error('Either:');
-      console.error(
-        '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
-      );
-      console.error('  2. Specify --project and --repo flags explicitly');
-      console.error('  3. Provide a PR ID or full PR URL');
+      printMissingRepoError('Provide a PR ID or full PR URL');
       process.exit(1);
     }
 
@@ -190,14 +180,7 @@ async function handler(argv: ArgumentsCamelCase<PrCommentArgs>): Promise<void> {
 
   // Validate we have project/repo (should be set by now, but double-check)
   if (!project || !repo) {
-    console.error('Error: Could not determine project and repository.');
-    console.error('');
-    console.error('Either:');
-    console.error(
-      '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
-    );
-    console.error('  2. Specify --project and --repo flags explicitly');
-    console.error('  3. Provide a full PR URL');
+    printMissingRepoError('Provide a full PR URL');
     process.exit(1);
   }
 
@@ -242,16 +225,11 @@ async function handler(argv: ArgumentsCamelCase<PrCommentArgs>): Promise<void> {
     const output = formatOutput(thread, format, prId, file, line);
     console.log(output);
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('Error: Unknown error occurred');
-    }
-    process.exit(1);
+    handleCommandError(error);
   }
 }
 
-export const prCommentCommand: CommandModule<object, PrCommentArgs> = {
+export default {
   command: 'comment <comment>',
   describe: 'Post a comment on a pull request',
   builder: (yargs: Argv) =>
@@ -295,4 +273,4 @@ export const prCommentCommand: CommandModule<object, PrCommentArgs> = {
         describe: 'End line number for multi-line comment range',
       }) as Argv<PrCommentArgs>,
   handler,
-};
+} satisfies CommandModule<object, PrCommentArgs>;

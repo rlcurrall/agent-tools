@@ -4,10 +4,14 @@
  * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/list?view=azure-devops-rest-7.1
  */
 
-import type { CommandModule, ArgumentsCamelCase } from 'yargs';
+import type { ArgumentsCamelCase, CommandModule } from 'yargs';
 import { loadAzureDevOpsConfig } from '@lib/config.js';
 import { AzureDevOpsClient } from '@lib/azure-devops-client.js';
-import { discoverRepoInfo } from '@lib/ado-utils.js';
+import {
+  resolveRepoContext,
+  printMissingRepoError,
+  MissingRepoContextError,
+} from '@lib/ado-utils.js';
 import type { AzureDevOpsPullRequest } from '@lib/types.js';
 import { validateArgs } from '@lib/validation.js';
 import {
@@ -15,6 +19,7 @@ import {
   type ListArgs,
   type OutputFormat,
 } from '@schemas/pr/list.js';
+import { handleCommandError } from '@lib/errors.js';
 
 /**
  * Format PR list output based on format type
@@ -82,35 +87,22 @@ function formatOutput(
 
 async function handler(argv: ArgumentsCamelCase<ListArgs>): Promise<void> {
   const args = validateArgs(ListArgsSchema, argv, 'list arguments');
-  let { project, repo } = args;
   const { format, status, limit } = args;
   const createdBy = args.createdBy ?? args.author;
 
-  // Auto-discover from git remote if not specified
-  if (!project || !repo) {
-    const discovered = discoverRepoInfo();
-    if (discovered) {
-      project = project || discovered.project;
-      repo = repo || discovered.repo;
-      if (format !== 'json') {
-        console.log(
-          `Auto-discovered: ${discovered.org}/${discovered.project}/${discovered.repo}`
-        );
-        console.log('');
-      }
+  // Resolve repository context (auto-discover if needed)
+  let project: string;
+  let repo: string;
+  try {
+    const context = resolveRepoContext(args.project, args.repo, { format });
+    project = context.project;
+    repo = context.repo;
+  } catch (error) {
+    if (error instanceof MissingRepoContextError) {
+      printMissingRepoError();
+      process.exit(1);
     }
-  }
-
-  // Validate we have all required info
-  if (!project || !repo) {
-    console.error('Error: Could not determine project and repository.');
-    console.error('');
-    console.error('Either:');
-    console.error(
-      '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
-    );
-    console.error('  2. Specify --project and --repo flags explicitly');
-    process.exit(1);
+    throw error;
   }
 
   try {
@@ -149,16 +141,11 @@ async function handler(argv: ArgumentsCamelCase<ListArgs>): Promise<void> {
     const output = formatOutput(prs, format, { project, repo });
     console.log(output);
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('Error: Unknown error occurred');
-    }
-    process.exit(1);
+    handleCommandError(error);
   }
 }
 
-export const listCommand: CommandModule<object, ListArgs> = {
+export default {
   command: 'list',
   describe: 'List pull requests',
   builder: {
@@ -197,4 +184,4 @@ export const listCommand: CommandModule<object, ListArgs> = {
     },
   },
   handler,
-};
+} satisfies CommandModule<object, ListArgs>;

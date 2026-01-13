@@ -6,11 +6,11 @@
 import type { CommandModule } from 'yargs';
 
 // Import all command modules
-import { searchCommand } from './search.js';
-import { ticketCommand } from './ticket.js';
-import { commentCommand } from './comment.js';
-import { commentsCommand } from './comments.js';
-import { descCommand } from './desc.js';
+import searchCommand from './search.js';
+import ticketCommand from './ticket.js';
+import commentCommand from './comment.js';
+import commentsCommand from './comments.js';
+import descCommand from './desc.js';
 
 export const jiraCommands: CommandModule = {
   command: 'jira <command>',

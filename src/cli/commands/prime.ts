@@ -11,7 +11,7 @@
  * - Shows configuration status warnings when env vars are missing
  */
 
-import { createCommandModule } from '@cli/utils';
+import type { CommandModule } from 'yargs';
 
 /**
  * Check if Jira environment variables are configured
@@ -136,11 +136,10 @@ function buildPrimeOutput(): string {
   return parts.join('\n').trim();
 }
 
-export default createCommandModule({
+export default {
   command: 'prime',
   describe: 'Output aide context for session start hook',
-  builder: {},
   handler() {
     console.log(buildPrimeOutput());
   },
-});
+} satisfies CommandModule;

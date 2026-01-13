@@ -4,18 +4,24 @@
  * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/get-pull-request
  */
 
-import type { CommandModule, ArgumentsCamelCase } from 'yargs';
+import type { ArgumentsCamelCase, CommandModule } from 'yargs';
 import { loadAzureDevOpsConfig } from '@lib/config.js';
 import { AzureDevOpsClient } from '@lib/azure-devops-client.js';
 import {
-  discoverRepoInfo,
+  resolveRepoContext,
+  printMissingRepoError,
   parsePRUrl,
   validatePRId,
   findPRByCurrentBranch,
 } from '@lib/ado-utils.js';
 import type { AzureDevOpsPullRequest } from '@lib/types.js';
 import { validateArgs } from '@lib/validation.js';
-import { ViewArgsSchema, type ViewArgs, type OutputFormat } from '@schemas/pr/view.js';
+import {
+  ViewArgsSchema,
+  type ViewArgs,
+  type OutputFormat,
+} from '@schemas/pr/view.js';
+import { handleCommandError } from '@lib/errors.js';
 
 /**
  * Extract branch name from ref (e.g., "refs/heads/main" -> "main")
@@ -81,22 +87,17 @@ function formatOutput(
 async function handler(argv: ArgumentsCamelCase<ViewArgs>): Promise<void> {
   const args = validateArgs(ViewArgsSchema, argv, 'view arguments');
   let prId: number | undefined;
-  let { project, repo } = args;
+  let project: string | undefined = args.project;
+  let repo: string | undefined = args.repo;
   const { format } = args;
 
-  // Auto-discover project/repo from git remote first (needed for PR auto-detection)
-  if (!project || !repo) {
-    const discovered = discoverRepoInfo();
-    if (discovered) {
-      project = project || discovered.project;
-      repo = repo || discovered.repo;
-      if (format !== 'json') {
-        console.log(
-          `Auto-discovered: ${discovered.org}/${discovered.project}/${discovered.repo}`
-        );
-        console.log('');
-      }
-    }
+  // Try auto-discover project/repo from git remote first (needed for PR auto-detection)
+  try {
+    const context = resolveRepoContext(project, repo, { format });
+    project = context.project;
+    repo = context.repo;
+  } catch {
+    // May still succeed if PR URL is provided
   }
 
   // Parse PR ID or URL, or auto-detect from current branch
@@ -130,14 +131,7 @@ async function handler(argv: ArgumentsCamelCase<ViewArgs>): Promise<void> {
   } else {
     // No PR ID provided - auto-detect from current branch
     if (!project || !repo) {
-      console.error('Error: Could not determine project and repository.');
-      console.error('');
-      console.error('Either:');
-      console.error(
-        '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
-      );
-      console.error('  2. Specify --project and --repo flags explicitly');
-      console.error('  3. Provide a PR ID or full PR URL');
+      printMissingRepoError('Provide a PR ID or full PR URL');
       process.exit(1);
     }
 
@@ -161,14 +155,7 @@ async function handler(argv: ArgumentsCamelCase<ViewArgs>): Promise<void> {
 
   // Validate we have project/repo
   if (!project || !repo) {
-    console.error('Error: Could not determine project and repository.');
-    console.error('');
-    console.error('Either:');
-    console.error(
-      '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
-    );
-    console.error('  2. Specify --project and --repo flags explicitly');
-    console.error('  3. Provide a full PR URL');
+    printMissingRepoError('Provide a full PR URL');
     process.exit(1);
   }
 
@@ -189,16 +176,11 @@ async function handler(argv: ArgumentsCamelCase<ViewArgs>): Promise<void> {
     const output = formatOutput(pr, format);
     console.log(output);
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('Error: Unknown error occurred');
-    }
-    process.exit(1);
+    handleCommandError(error);
   }
 }
 
-export const viewCommand: CommandModule<object, ViewArgs> = {
+export default {
   command: 'view',
   describe: 'View pull request details',
   builder: {
@@ -223,4 +205,4 @@ export const viewCommand: CommandModule<object, ViewArgs> = {
     },
   },
   handler,
-};
+} satisfies CommandModule<object, ViewArgs>;

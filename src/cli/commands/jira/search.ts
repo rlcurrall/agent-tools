@@ -3,12 +3,13 @@
  * Search for Jira tickets using JQL (Jira Query Language)
  */
 
-import type { CommandModule, ArgumentsCamelCase } from 'yargs';
+import type { ArgumentsCamelCase, CommandModule } from 'yargs';
 import { loadConfig } from '@lib/config.js';
 import { JiraClient } from '@lib/jira-client.js';
 import { formatSearchResults } from '@lib/cli-utils.js';
 import { validateArgs } from '@lib/validation.js';
 import { SearchArgsSchema, type SearchArgs } from '@schemas/jira/search.js';
+import { handleCommandError } from '@lib/errors.js';
 
 async function handler(argv: ArgumentsCamelCase<SearchArgs>): Promise<void> {
   // Validate arguments with Valibot schema
@@ -35,16 +36,11 @@ async function handler(argv: ArgumentsCamelCase<SearchArgs>): Promise<void> {
       console.log(output);
     }
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('Error: Unknown error occurred');
-    }
-    process.exit(1);
+    handleCommandError(error);
   }
 }
 
-export const searchCommand: CommandModule<object, SearchArgs> = {
+export default {
   command: 'search <query> [maxResults]',
   describe: 'Search Jira tickets using JQL',
   builder: {
@@ -69,4 +65,4 @@ export const searchCommand: CommandModule<object, SearchArgs> = {
     },
   },
   handler,
-};
+} satisfies CommandModule<object, SearchArgs>;

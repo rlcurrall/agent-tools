@@ -4,10 +4,15 @@
  * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/create?view=azure-devops-rest-7.2
  */
 
-import type { CommandModule, ArgumentsCamelCase } from 'yargs';
+import type { ArgumentsCamelCase, CommandModule } from 'yargs';
 import { loadAzureDevOpsConfig } from '@lib/config.js';
 import { AzureDevOpsClient } from '@lib/azure-devops-client.js';
-import { discoverRepoInfo, getCurrentBranch } from '@lib/ado-utils.js';
+import {
+  resolveRepoContext,
+  printMissingRepoError,
+  MissingRepoContextError,
+  getCurrentBranch,
+} from '@lib/ado-utils.js';
 import type { AzureDevOpsPullRequest, GitRemoteInfo } from '@lib/types.js';
 import { validateArgs } from '@lib/validation.js';
 import {
@@ -15,6 +20,7 @@ import {
   type PrCreateArgs,
   type OutputFormat,
 } from '@schemas/pr/pr-create.js';
+import { handleCommandError } from '@lib/errors.js';
 
 /**
  * Ensure branch name has refs/heads/ prefix
@@ -82,35 +88,24 @@ function formatOutput(
 
 async function handler(argv: ArgumentsCamelCase<PrCreateArgs>): Promise<void> {
   const args = validateArgs(PrCreateArgsSchema, argv, 'pr-create arguments');
-  let { project, repo } = args;
   const { title, body, draft, format } = args;
   let { head, base } = args;
 
-  // Auto-discover from git remote if not specified
-  let repoInfo: GitRemoteInfo | null = null;
-  if (!project || !repo) {
-    repoInfo = discoverRepoInfo();
-    if (repoInfo) {
-      project = project || repoInfo.project;
-      repo = repo || repoInfo.repo;
-      if (format !== 'json') {
-        console.log(
-          `Auto-discovered: ${repoInfo.org}/${repoInfo.project}/${repoInfo.repo}`
-        );
-      }
+  // Resolve repository context (auto-discover if needed)
+  let project: string;
+  let repo: string;
+  let repoInfo: GitRemoteInfo | undefined;
+  try {
+    const context = resolveRepoContext(args.project, args.repo, { format });
+    project = context.project;
+    repo = context.repo;
+    repoInfo = context.repoInfo;
+  } catch (error) {
+    if (error instanceof MissingRepoContextError) {
+      printMissingRepoError();
+      process.exit(1);
     }
-  }
-
-  // Validate we have project and repo
-  if (!project || !repo) {
-    console.error('Error: Could not determine project and repository.');
-    console.error('');
-    console.error('Either:');
-    console.error(
-      '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
-    );
-    console.error('  2. Specify --project and --repo flags explicitly');
-    process.exit(1);
+    throw error;
   }
 
   // Auto-detect source branch from current git branch if not specified
@@ -177,16 +172,11 @@ async function handler(argv: ArgumentsCamelCase<PrCreateArgs>): Promise<void> {
     const output = formatOutput(pr, format, prUrl);
     console.log(output);
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('Error: Unknown error occurred');
-    }
-    process.exit(1);
+    handleCommandError(error);
   }
 }
 
-export const prCreateCommand: CommandModule<object, PrCreateArgs> = {
+export default {
   command: 'create',
   describe: 'Create a pull request',
   builder: {
@@ -234,4 +224,4 @@ export const prCreateCommand: CommandModule<object, PrCreateArgs> = {
     },
   },
   handler,
-};
+} satisfies CommandModule<object, PrCreateArgs>;

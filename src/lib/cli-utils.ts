@@ -5,46 +5,6 @@ import type {
   AdfNode,
 } from './types.js';
 
-export function parseArgs(args: string[]): {
-  query?: string;
-  maxResults?: number;
-  help?: boolean;
-} {
-  const result: { query?: string; maxResults?: number; help?: boolean } = {};
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (!arg) continue; // Skip undefined values
-
-    if (arg === '-h' || arg === '--help') {
-      result.help = true;
-    } else if (!result.query) {
-      result.query = arg;
-    } else if (!result.maxResults && /^\d+$/.test(arg)) {
-      result.maxResults = parseInt(arg, 10);
-    }
-  }
-
-  return result;
-}
-
-export function parseTicketArgs(args: string[]): {
-  ticketKey?: string;
-  help?: boolean;
-} {
-  const result: { ticketKey?: string; help?: boolean } = {};
-
-  for (const arg of args) {
-    if (arg === '-h' || arg === '--help') {
-      result.help = true;
-    } else if (!result.ticketKey) {
-      result.ticketKey = arg;
-    }
-  }
-
-  return result;
-}
-
 export function formatSearchResults(response: JiraSearchResponse): string {
   if (response.errorMessages || response.errors) {
     return `Error: ${response.errorMessages?.join(', ') || JSON.stringify(response.errors)}`;

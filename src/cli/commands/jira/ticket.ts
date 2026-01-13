@@ -3,13 +3,14 @@
  * Get detailed information about a specific Jira ticket
  */
 
-import type { CommandModule, ArgumentsCamelCase } from 'yargs';
+import type { ArgumentsCamelCase, CommandModule } from 'yargs';
 import { loadConfig } from '@lib/config.js';
 import { JiraClient } from '@lib/jira-client.js';
 import { formatTicketDetails } from '@lib/cli-utils.js';
 import { validateArgs } from '@lib/validation.js';
 import { isValidTicketKeyFormat } from '@schemas/common.js';
 import { TicketArgsSchema, type TicketArgs } from '@schemas/jira/ticket.js';
+import { handleCommandError } from '@lib/errors.js';
 
 async function handler(argv: ArgumentsCamelCase<TicketArgs>): Promise<void> {
   const args = validateArgs(TicketArgsSchema, argv, 'ticket arguments');
@@ -42,16 +43,11 @@ async function handler(argv: ArgumentsCamelCase<TicketArgs>): Promise<void> {
       console.log(output);
     }
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('Error: Unknown error occurred');
-    }
-    process.exit(1);
+    handleCommandError(error);
   }
 }
 
-export const ticketCommand: CommandModule<object, TicketArgs> = {
+export default {
   command: 'ticket <ticketKey>',
   describe: 'Get ticket details (summary, description, metadata)',
   builder: {
@@ -68,4 +64,4 @@ export const ticketCommand: CommandModule<object, TicketArgs> = {
     },
   },
   handler,
-};
+} satisfies CommandModule<object, TicketArgs>;

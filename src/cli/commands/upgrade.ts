@@ -8,7 +8,7 @@
  * 4. On next startup, cleanup removes the .old file
  */
 
-import { createCommandModule } from '@cli/utils';
+import type { CommandModule } from 'yargs';
 import { spawnSync } from 'child_process';
 import { renameSync, existsSync } from 'fs';
 import {
@@ -63,10 +63,9 @@ async function downloadLatestRelease(outputPath: string): Promise<void> {
   }
 }
 
-export default createCommandModule({
+export default {
   command: 'upgrade',
   describe: 'Upgrade aide to the latest version',
-  builder: {},
   async handler() {
     try {
       const currentPath = getCurrentBinaryPath();
@@ -109,4 +108,4 @@ export default createCommandModule({
       process.exit(1);
     }
   },
-});
+} satisfies CommandModule;

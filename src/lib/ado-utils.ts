@@ -146,6 +146,106 @@ export interface FindPRResult {
 }
 
 /**
+ * Error class for missing repository context
+ */
+export class MissingRepoContextError extends Error {
+  constructor(message: string = 'Could not determine project and repository') {
+    super(message);
+    this.name = 'MissingRepoContextError';
+  }
+}
+
+/**
+ * Options for resolving repository context
+ */
+export interface ResolveRepoContextOptions {
+  /** If true, skip printing auto-discovery message */
+  silent?: boolean;
+  /** Output format - if 'json', auto-discovery messages are suppressed */
+  format?: 'text' | 'json' | 'markdown';
+}
+
+/**
+ * Result of resolving repository context
+ */
+export interface ResolvedRepoContext {
+  project: string;
+  repo: string;
+  org?: string;
+  /** The full repo info if auto-discovered */
+  repoInfo?: GitRemoteInfo;
+}
+
+/**
+ * Print the standard error message for missing project/repository
+ * @param extraHint Optional additional hint to append (e.g., "Provide a PR ID or full PR URL")
+ */
+export function printMissingRepoError(extraHint?: string): void {
+  console.error('Error: Could not determine project and repository.');
+  console.error('');
+  console.error('Either:');
+  console.error(
+    '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
+  );
+  console.error('  2. Specify --project and --repo flags explicitly');
+  if (extraHint) {
+    console.error(`  3. ${extraHint}`);
+  }
+}
+
+/**
+ * Resolve repository context from provided values or auto-discovery
+ *
+ * This function:
+ * 1. If project and repo are already provided, returns them
+ * 2. Otherwise, attempts to auto-discover from git remote
+ * 3. Merges discovered values with provided values
+ * 4. Optionally logs auto-discovery message (unless silent or format is json)
+ * 5. Throws MissingRepoContextError if project/repo still missing
+ *
+ * @param project - Project name (may be undefined)
+ * @param repo - Repository name (may be undefined)
+ * @param options - Options for resolution behavior
+ * @returns Resolved context with project, repo, and optionally org
+ * @throws MissingRepoContextError if context cannot be resolved
+ */
+export function resolveRepoContext(
+  project: string | undefined,
+  repo: string | undefined,
+  options?: ResolveRepoContextOptions
+): ResolvedRepoContext {
+  const silent = options?.silent || options?.format === 'json';
+  let repoInfo: GitRemoteInfo | null = null;
+
+  // Auto-discover from git remote if not fully specified
+  if (!project || !repo) {
+    repoInfo = discoverRepoInfo();
+    if (repoInfo) {
+      project = project || repoInfo.project;
+      repo = repo || repoInfo.repo;
+      if (!silent) {
+        console.log(
+          `Auto-discovered: ${repoInfo.org}/${repoInfo.project}/${repoInfo.repo}`
+        );
+        console.log('');
+      }
+    }
+  }
+
+  // Validate we have all required info
+  if (!project || !repo) {
+    throw new MissingRepoContextError();
+  }
+
+  return {
+    project,
+    repo,
+    org: repoInfo?.org,
+    repoInfo: repoInfo ?? undefined,
+  };
+}
+
+/**
  * Find a pull request by the current git branch
  * Queries Azure DevOps for PRs matching the current branch as source
  * If multiple PRs found, filters to active first, then picks most recent

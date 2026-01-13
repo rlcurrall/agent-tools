@@ -3,7 +3,7 @@
  * Removes the aide Claude Code plugin from specified scopes
  */
 
-import type { CommandModule, ArgumentsCamelCase } from 'yargs';
+import type { ArgumentsCamelCase, CommandModule } from 'yargs';
 import { homedir } from 'os';
 import { join } from 'path';
 import { existsSync, rmSync, readFileSync, writeFileSync } from 'fs';
@@ -108,7 +108,7 @@ async function handler(argv: ArgumentsCamelCase<UninstallArgv>): Promise<void> {
   console.log('Uninstall complete. Restart Claude Code to apply changes.');
 }
 
-export const uninstallCommand: CommandModule<object, UninstallArgv> = {
+export default {
   command: 'uninstall',
   describe: 'Remove the aide plugin from Claude Code',
   builder: {
@@ -134,4 +134,4 @@ export const uninstallCommand: CommandModule<object, UninstallArgv> = {
     },
   },
   handler,
-};
+} satisfies CommandModule<object, UninstallArgv>;

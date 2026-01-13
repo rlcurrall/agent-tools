@@ -4,11 +4,12 @@
  * @see https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/update?view=azure-devops-rest-7.1
  */
 
-import type { CommandModule, ArgumentsCamelCase } from 'yargs';
+import type { ArgumentsCamelCase, CommandModule } from 'yargs';
 import { loadAzureDevOpsConfig } from '@lib/config.js';
 import { AzureDevOpsClient } from '@lib/azure-devops-client.js';
 import {
-  discoverRepoInfo,
+  resolveRepoContext,
+  printMissingRepoError,
   parsePRUrl,
   validatePRId,
   findPRByCurrentBranch,
@@ -24,6 +25,7 @@ import {
   type PrUpdateArgs,
   type OutputFormat,
 } from '@schemas/pr/pr-update.js';
+import { handleCommandError } from '@lib/errors.js';
 
 /**
  * Ensure branch name has refs/heads/ prefix
@@ -109,7 +111,8 @@ function formatOutput(
 async function handler(argv: ArgumentsCamelCase<PrUpdateArgs>): Promise<void> {
   const args = validateArgs(PrUpdateArgsSchema, argv, 'pr-update arguments');
   let prId: number | undefined;
-  let { project, repo } = args;
+  let project: string | undefined = args.project;
+  let repo: string | undefined = args.repo;
   const {
     format,
     title,
@@ -120,7 +123,7 @@ async function handler(argv: ArgumentsCamelCase<PrUpdateArgs>): Promise<void> {
     abandon,
     activate,
   } = args;
-  let repoInfo: GitRemoteInfo | null = null;
+  let repoInfo: GitRemoteInfo | undefined;
 
   // Validate conflicting flags
   if (draft && publish) {
@@ -133,19 +136,14 @@ async function handler(argv: ArgumentsCamelCase<PrUpdateArgs>): Promise<void> {
     process.exit(1);
   }
 
-  // Auto-discover project/repo from git remote first (needed for PR auto-detection)
-  if (!project || !repo) {
-    repoInfo = discoverRepoInfo();
-    if (repoInfo) {
-      project = project || repoInfo.project;
-      repo = repo || repoInfo.repo;
-      if (format !== 'json') {
-        console.log(
-          `Auto-discovered: ${repoInfo.org}/${repoInfo.project}/${repoInfo.repo}`
-        );
-        console.log('');
-      }
-    }
+  // Try auto-discover project/repo from git remote first (needed for PR auto-detection)
+  try {
+    const context = resolveRepoContext(project, repo, { format });
+    project = context.project;
+    repo = context.repo;
+    repoInfo = context.repoInfo;
+  } catch {
+    // May still succeed if PR URL is provided
   }
 
   // Parse PR ID or URL, or auto-detect from current branch
@@ -180,14 +178,7 @@ async function handler(argv: ArgumentsCamelCase<PrUpdateArgs>): Promise<void> {
     // No PR ID provided - auto-detect from current branch
     // We need project/repo for this
     if (!project || !repo) {
-      console.error('Error: Could not determine project and repository.');
-      console.error('');
-      console.error('Either:');
-      console.error(
-        '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
-      );
-      console.error('  2. Specify --project and --repo flags explicitly');
-      console.error('  3. Provide a PR ID or full PR URL');
+      printMissingRepoError('Provide a PR ID or full PR URL');
       process.exit(1);
     }
 
@@ -211,14 +202,7 @@ async function handler(argv: ArgumentsCamelCase<PrUpdateArgs>): Promise<void> {
 
   // Validate we have project/repo (should be set by now, but double-check)
   if (!project || !repo) {
-    console.error('Error: Could not determine project and repository.');
-    console.error('');
-    console.error('Either:');
-    console.error(
-      '  1. Run this command from within a git repository with a supported remote (Azure DevOps)'
-    );
-    console.error('  2. Specify --project and --repo flags explicitly');
-    console.error('  3. Provide a full PR URL');
+    printMissingRepoError('Provide a full PR URL');
     process.exit(1);
   }
 
@@ -311,16 +295,11 @@ async function handler(argv: ArgumentsCamelCase<PrUpdateArgs>): Promise<void> {
     const output = formatOutput(updatedPR, format, prUrl);
     console.log(output);
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('Error: Unknown error occurred');
-    }
-    process.exit(1);
+    handleCommandError(error);
   }
 }
 
-export const prUpdateCommand: CommandModule<object, PrUpdateArgs> = {
+export default {
   command: 'update',
   describe: 'Update a pull request',
   builder: {
@@ -373,4 +352,4 @@ export const prUpdateCommand: CommandModule<object, PrUpdateArgs> = {
     },
   },
   handler,
-};
+} satisfies CommandModule<object, PrUpdateArgs>;

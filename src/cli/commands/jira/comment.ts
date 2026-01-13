@@ -3,13 +3,14 @@
  * Add a comment to a specific Jira ticket
  */
 
-import type { CommandModule, ArgumentsCamelCase } from 'yargs';
+import type { ArgumentsCamelCase, CommandModule } from 'yargs';
 import { loadConfig } from '@lib/config.js';
 import { JiraClient } from '@lib/jira-client.js';
 import { convert as markdownToAdf } from '@lib/md-to-adf.js';
 import { validateArgs } from '@lib/validation.js';
 import { isValidTicketKeyFormat } from '@schemas/common.js';
 import { CommentArgsSchema, type CommentArgs } from '@schemas/jira/comment.js';
+import { handleCommandError } from '@lib/errors.js';
 
 async function handler(argv: ArgumentsCamelCase<CommentArgs>): Promise<void> {
   const args = validateArgs(CommentArgsSchema, argv, 'comment arguments');
@@ -76,16 +77,11 @@ async function handler(argv: ArgumentsCamelCase<CommentArgs>): Promise<void> {
       console.log(`Author: ${result.author.displayName}`);
     }
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('Error: Unknown error occurred');
-    }
-    process.exit(1);
+    handleCommandError(error);
   }
 }
 
-export const commentCommand: CommandModule<object, CommentArgs> = {
+export default {
   command: 'comment <ticketKey> [comment]',
   describe: 'Add a comment to a ticket',
   builder: {
@@ -111,4 +107,4 @@ export const commentCommand: CommandModule<object, CommentArgs> = {
     },
   },
   handler,
-};
+} satisfies CommandModule<object, CommentArgs>;

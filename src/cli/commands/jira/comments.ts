@@ -3,7 +3,7 @@
  * Retrieve comments from a specific Jira ticket with filtering options
  */
 
-import type { CommandModule, ArgumentsCamelCase } from 'yargs';
+import type { ArgumentsCamelCase, CommandModule } from 'yargs';
 import { loadConfig } from '@lib/config.js';
 import { JiraClient } from '@lib/jira-client.js';
 import { validateArgs } from '@lib/validation.js';
@@ -18,6 +18,7 @@ import {
   CommentsArgsSchema,
   type CommentsArgs,
 } from '@schemas/jira/comments.js';
+import { handleCommandError } from '@lib/errors.js';
 
 /**
  * Fetch all comments with pagination support
@@ -100,16 +101,11 @@ async function handler(argv: ArgumentsCamelCase<CommentsArgs>): Promise<void> {
     const output = formatCommentsOutput(filteredComments, format, ticketKey);
     console.log(output);
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('Error: Unknown error occurred');
-    }
-    process.exit(1);
+    handleCommandError(error);
   }
 }
 
-export const commentsCommand: CommandModule<object, CommentsArgs> = {
+export default {
   command: 'comments <ticketKey>',
   describe: 'Get comments from a ticket',
   builder: {
@@ -148,4 +144,4 @@ export const commentsCommand: CommandModule<object, CommentsArgs> = {
     },
   },
   handler,
-};
+} satisfies CommandModule<object, CommentsArgs>;

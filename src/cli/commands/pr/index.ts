@@ -5,13 +5,13 @@
  */
 
 import type { CommandModule } from 'yargs';
-import { listCommand } from './list.js';
-import { viewCommand } from './view.js';
-import { commentsCommand } from './comments.js';
-import { prCommentCommand } from './pr-comment.js';
-import { prCreateCommand } from './pr-create.js';
-import { prUpdateCommand } from './pr-update.js';
-import { prReplyCommand } from './pr-reply.js';
+import listCommand from './list.js';
+import viewCommand from './view.js';
+import commentsCommand from './comments.js';
+import prCommentCommand from './pr-comment.js';
+import prCreateCommand from './pr-create.js';
+import prUpdateCommand from './pr-update.js';
+import prReplyCommand from './pr-reply.js';
 
 export const prCommands: CommandModule = {
   command: 'pr <command>',

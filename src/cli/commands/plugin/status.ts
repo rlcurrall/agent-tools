@@ -3,10 +3,10 @@
  * Shows the installation status of the aide Claude Code plugin across all scopes
  */
 
-import type { CommandModule } from 'yargs';
 import { homedir } from 'os';
 import { join } from 'path';
 import { existsSync, readFileSync, readdirSync } from 'fs';
+import type { CommandModule } from 'yargs';
 
 type Scope = 'user' | 'project' | 'local';
 
@@ -41,7 +41,7 @@ function getInstallPaths(scope: Scope): InstallPaths {
 }
 
 /**
- * Check if the ax plugin is enabled in a settings file
+ * Check if the aide plugin is enabled in a settings file
  */
 function isPluginEnabled(settingsFile: string): boolean {
   if (!existsSync(settingsFile)) return false;
@@ -114,9 +114,8 @@ async function handler(): Promise<void> {
   }
 }
 
-export const statusCommand: CommandModule = {
+export default {
   command: 'status',
   describe: 'Show plugin installation status',
-  builder: {},
   handler,
-};
+} satisfies CommandModule;

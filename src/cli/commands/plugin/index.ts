@@ -4,9 +4,9 @@
  */
 
 import type { CommandModule } from 'yargs';
-import { installCommand } from './install.js';
-import { uninstallCommand } from './uninstall.js';
-import { statusCommand } from './status.js';
+import installCommand from './install.js';
+import uninstallCommand from './uninstall.js';
+import statusCommand from './status.js';
 
 export const pluginCommands: CommandModule = {
   command: 'plugin <command>',

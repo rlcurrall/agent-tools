@@ -3,13 +3,14 @@
  * Set or update the description of a specific Jira ticket
  */
 
-import type { CommandModule, ArgumentsCamelCase } from 'yargs';
+import type { ArgumentsCamelCase, CommandModule } from 'yargs';
 import { loadConfig } from '@lib/config.js';
 import { JiraClient } from '@lib/jira-client.js';
 import { validateArgs } from '@lib/validation.js';
 import { isValidTicketKeyFormat } from '@schemas/common.js';
 import { convert as markdownToAdf } from '@lib/md-to-adf.js';
 import { DescArgsSchema, type DescArgs } from '@schemas/jira/desc.js';
+import { handleCommandError } from '@lib/errors.js';
 
 async function handler(argv: ArgumentsCamelCase<DescArgs>): Promise<void> {
   const args = validateArgs(DescArgsSchema, argv, 'desc arguments');
@@ -85,16 +86,11 @@ async function handler(argv: ArgumentsCamelCase<DescArgs>): Promise<void> {
       console.log(`View ticket: ${config.url}/browse/${ticketKey}`);
     }
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('Error: Unknown error occurred');
-    }
-    process.exit(1);
+    handleCommandError(error);
   }
 }
 
-export const descCommand: CommandModule<object, DescArgs> = {
+export default {
   command: 'desc <ticketKey> [description]',
   describe: 'Set or update ticket description',
   builder: {
@@ -120,4 +116,4 @@ export const descCommand: CommandModule<object, DescArgs> = {
     },
   },
   handler,
-};
+} satisfies CommandModule<object, DescArgs>;
