@@ -12,7 +12,7 @@ The CLI follows a hierarchical command structure: `aide <service> <action> [opti
 
 - `jira` - Jira ticket management (search, ticket, comment, comments, desc)
 - `pr` - Pull request management (list, view, diff, create, update, comments, comment, reply)
-- `plugin` - Claude Code plugin management (install, uninstall, status)
+- `plugin` - Claude Code plugin management (status, uninstall)
 
 **Top-level Commands:**
 
@@ -41,30 +41,24 @@ bun run dev pr comments --pr 24094 --latest 5
 bun run src/cli/index.ts --help
 ```
 
-### Plugin Management
+### Plugin Installation
+
+Install the aide plugin using Claude Code's native plugin system:
 
 ```bash
-# Install plugin (user scope, all projects)
-bun run dev plugin install --user
+# Add the marketplace
+/plugin marketplace add rlcurrall/aide
 
-# Install to current project only (committed to git)
-bun run dev plugin install --project
-
-# Install to current project (gitignored)
-bun run dev plugin install --local
-
-# Check installation status
-bun run dev plugin status
-
-# Remove plugin
-bun run dev plugin uninstall --user
+# Install the plugin
+/plugin install aide@aide-marketplace
 ```
 
-Installation scopes:
+Or use the CLI to check status / uninstall:
 
-- `--user` (default): `~/.claude/plugins/aide/` - Personal, available in all projects
-- `--project`: `.claude/plugins/aide/` - Team-shared via git
-- `--local`: `.claude/plugins/aide/` - Project-specific, gitignored
+```bash
+bun run dev plugin status
+bun run dev plugin uninstall --user
+```
 
 ### Building Binaries
 
@@ -112,7 +106,6 @@ src/
     ado-utils.ts          # Git remote URL parsing (Azure DevOps-specific utilities)
     cli-utils.ts          # CLI formatting helpers
     comment-utils.ts      # Comment filtering utilities
-    embedded-plugin.ts    # Embedded plugin files for installation
     types.ts              # TypeScript interfaces
 
 commands/                 # Claude Code slash commands (for plugin)
