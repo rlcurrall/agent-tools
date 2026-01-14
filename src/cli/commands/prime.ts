@@ -97,6 +97,11 @@ aide pr list --status active
 aide pr view --pr 123
 aide pr view  # auto-detect from branch
 
+# View PR diff
+aide pr diff --pr 123
+aide pr diff --stat  # summary with line counts
+aide pr diff --files  # list changed files only
+
 # Get PR comments (with explicit PR ID)
 aide pr comments --pr 24094 --latest 10
 aide pr comments --latest 10  # auto-detect from branch
