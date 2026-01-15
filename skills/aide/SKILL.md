@@ -15,29 +15,47 @@ The aide CLI provides AI coding agents with tools to interact with Jira and Azur
 
 ### Jira Commands
 
-| Command                                       | Description                   |
-| --------------------------------------------- | ----------------------------- |
-| `aide jira search "JQL"`                      | Search tickets with JQL query |
-| `aide jira view KEY`                          | Get ticket details            |
-| `aide jira create -p PROJ -t Type -s "Title"` | Create a new ticket           |
-| `aide jira update KEY --field value`          | Update ticket fields          |
-| `aide jira transition KEY "Status"`           | Change workflow status        |
-| `aide jira comment KEY "text"`                | Add comment to ticket         |
-| `aide jira comments KEY`                      | Get ticket comments           |
-| `aide jira attach KEY --list`                 | Manage attachments            |
+| Command                                       | Description                        |
+| --------------------------------------------- | ---------------------------------- |
+| `aide jira search "JQL"`                      | Search tickets with JQL query      |
+| `aide jira view KEY`                          | Get ticket details                 |
+| `aide jira create -p PROJ -t Type -s "Title"` | Create a new ticket                |
+| `aide jira update KEY --field "Name=value"`   | Update ticket fields               |
+| `aide jira fields PROJ -t Type`               | Discover available fields          |
+| `aide jira transition KEY "Status"`           | Change workflow status             |
+| `aide jira comment KEY "text"`                | Add comment to ticket              |
+| `aide jira comments KEY`                      | Get ticket comments                |
+| `aide jira attach KEY --list`                 | Manage attachments                 |
+
+#### Custom Field Handling
+
+The `--field` flag on create/update commands supports intelligent field handling:
+
+```bash
+# Use human-readable field names (auto-resolved to internal IDs)
+aide jira update PROJ-123 --field "Severity=High"
+aide jira create -p PROJ -t Bug -s "Bug" --field "Severity=Critical" --field "Environment=Production"
+
+# Discover available fields and allowed values
+aide jira fields PROJ -t Bug --show-values
+```
+
+- **Name resolution**: Use "Severity" instead of "customfield_10269"
+- **Auto-formatting**: Values are formatted based on field type (select, array, etc.)
+- **Validation**: Invalid values show helpful errors with allowed options
 
 ### Pull Request Commands
 
-| Command                           | Description          |
-| --------------------------------- | -------------------- |
-| `aide pr list`                    | List pull requests   |
-| `aide pr view [--pr ID]`          | View PR details      |
-| `aide pr diff [--pr ID] [--fetch]`| View PR diff/changes (auto-fetches branches by default) |
-| `aide pr create`                  | Create a PR          |
-| `aide pr update [--pr ID]`        | Update a PR          |
-| `aide pr comments [--pr ID]`      | Get PR comments      |
-| `aide pr comment "msg" [--pr ID]` | Post PR comment      |
-| `aide pr reply <thread> "msg"`    | Reply to thread      |
+| Command                            | Description                                             |
+| ---------------------------------- | ------------------------------------------------------- |
+| `aide pr list`                     | List pull requests                                      |
+| `aide pr view [--pr ID]`           | View PR details                                         |
+| `aide pr diff [--pr ID] [--fetch]` | View PR diff/changes (auto-fetches branches by default) |
+| `aide pr create`                   | Create a PR                                             |
+| `aide pr update [--pr ID]`         | Update a PR                                             |
+| `aide pr comments [--pr ID]`       | Get PR comments                                         |
+| `aide pr comment "msg" [--pr ID]`  | Post PR comment                                         |
+| `aide pr reply <thread> "msg"`     | Reply to thread                                         |
 
 ## Ticket-Driven Development Workflow
 

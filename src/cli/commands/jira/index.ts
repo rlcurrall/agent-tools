@@ -14,6 +14,7 @@ import transitionCommand from './transition.js';
 import commentCommand from './comment.js';
 import commentsCommand from './comments.js';
 import attachCommand from './attach.js';
+import fieldsCommand from './fields.js';
 
 export const jiraCommands: CommandModule = {
   command: 'jira <command>',
@@ -29,6 +30,7 @@ export const jiraCommands: CommandModule = {
       .command(commentCommand)
       .command(commentsCommand)
       .command(attachCommand)
+      .command(fieldsCommand)
       .demandCommand(1, 'Please specify a jira command')
       .example('$0 jira search "assignee = currentUser()"', 'Search tickets')
       .example('$0 jira view PROJ-123', 'Get ticket details')
@@ -37,7 +39,11 @@ export const jiraCommands: CommandModule = {
       .example('$0 jira transition PROJ-123 "In Progress"', 'Change status')
       .example('$0 jira comment PROJ-123 "Comment text"', 'Add a comment')
       .example('$0 jira comments PROJ-123 --latest 5', 'Get recent comments')
-      .example('$0 jira attach PROJ-123 --list', 'List attachments'),
+      .example('$0 jira attach PROJ-123 --list', 'List attachments')
+      .example(
+        '$0 jira fields VNT -t Task --show-values',
+        'List fields with values'
+      ),
   handler: () => {
     // This won't be called due to demandCommand
   },

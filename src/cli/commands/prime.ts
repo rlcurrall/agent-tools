@@ -82,6 +82,13 @@ aide jira create -p PROJ -t Task -s "Summary" --assignee me
 aide jira update PROJ-123 --assignee me --priority High
 aide jira update PROJ-123 --description "New description"
 
+# Set custom fields (use field name or ID - auto-formats by type)
+aide jira update PROJ-123 --field "Severity=Critical"
+aide jira create -p PROJ -t Bug -s "Bug" --field "Severity=High"
+
+# Discover available fields for a project/issue type
+aide jira fields PROJ -t Bug --show-values
+
 # Change workflow status
 aide jira transition PROJ-123 "In Progress"
 aide jira transition PROJ-123 --list  # show available transitions

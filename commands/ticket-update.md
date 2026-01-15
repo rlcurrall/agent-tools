@@ -27,19 +27,29 @@ aide jira update $ARGUMENTS
 
 ## Flags
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--summary` | `-s` | Update summary/title |
-| `--description` | `-d` | Update description (markdown format) |
-| `--file` | `-f` | Read description from markdown file |
-| `--assignee` | `-a` | Update assignee (email, account ID, "me", or "none") |
-| `--priority` | | Update priority (e.g., High, Medium, Low) |
-| `--labels` | | Set labels (comma-separated, replaces existing) |
-| `--add-labels` | | Add labels (comma-separated, keeps existing) |
-| `--remove-labels` | | Remove labels (comma-separated) |
-| `--component` | | Set components (can be repeated, replaces existing) |
-| `--field` | | Custom field (format: fieldName=value, can repeat) |
-| `--format` | | Output format: text, json, markdown |
+| Flag              | Short | Description                                          |
+| ----------------- | ----- | ---------------------------------------------------- |
+| `--summary`       | `-s`  | Update summary/title                                 |
+| `--description`   | `-d`  | Update description (markdown format)                 |
+| `--file`          | `-f`  | Read description from markdown file                  |
+| `--assignee`      | `-a`  | Update assignee (email, account ID, "me", or "none") |
+| `--priority`      |       | Update priority (e.g., High, Medium, Low)            |
+| `--labels`        |       | Set labels (comma-separated, replaces existing)      |
+| `--add-labels`    |       | Add labels (comma-separated, keeps existing)         |
+| `--remove-labels` |       | Remove labels (comma-separated)                      |
+| `--component`     |       | Set components (can be repeated, replaces existing)  |
+| `--field`         |       | Custom field (see below for details)                 |
+| `--format`        |       | Output format: text, json, markdown                  |
+
+## Custom Fields
+
+The `--field` flag supports intelligent field handling:
+
+- **Name resolution**: Use human-readable names like `--field "Severity=High"` instead of `--field "customfield_10269=High"`
+- **Auto-formatting**: Values are automatically formatted based on field type (select fields, arrays, etc.)
+- **Validation**: Invalid values show helpful errors with the list of allowed values
+
+Use `/aide:ticket-fields PROJECT -t IssueType` to discover available fields and their allowed values.
 
 **Note:** At least one field to update must be specified.
 
@@ -86,8 +96,9 @@ aide jira update PROJ-123 --remove-labels "wip,draft"
 # Set components
 aide jira update PROJ-123 --component API --component Backend
 
-# Set custom field
-aide jira update PROJ-123 --field "customfield_10001=value"
+# Set custom field (use field name, auto-formatted)
+aide jira update PROJ-123 --field "Severity=High"
+aide jira update PROJ-123 --field "Environment=Production" --field "Root Cause=Configuration"
 
 # Multiple updates at once
 aide jira update PROJ-123 --summary "New title" --assignee me --priority High --add-labels "in-progress"
@@ -96,5 +107,6 @@ aide jira update PROJ-123 --summary "New title" --assignee me --priority High --
 ## Important Notes
 
 - **Description replacement**: `--description` replaces the entire description. Read the ticket first to preserve existing content if needed.
+- **Description format**: Use Markdown - it's automatically converted to Jira format. If Jira wiki syntax is detected, a warning will suggest the Markdown equivalent.
 - **Labels**: Use `--labels` to replace all labels, `--add-labels` to add without removing, `--remove-labels` to remove specific ones.
 - **Assignee options**: Use "me" for yourself, "none" to unassign, or provide an email/account ID.

@@ -70,6 +70,16 @@ export interface JiraIssueType {
   id: string;
 }
 
+/**
+ * Allowed value from Jira field metadata
+ * Used for select/option fields to define valid choices
+ */
+export interface AllowedValue {
+  id: string;
+  name: string;
+  value?: string;
+}
+
 export interface JiraAttachment {
   id: string;
   filename: string;
@@ -215,11 +225,7 @@ export interface JiraFieldMeta {
     custom?: string;
     system?: string;
   };
-  allowedValues?: Array<{
-    id: string;
-    name: string;
-    value?: string;
-  }>;
+  allowedValues?: AllowedValue[];
   hasDefaultValue?: boolean;
   defaultValue?: unknown;
 }

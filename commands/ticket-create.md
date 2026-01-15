@@ -21,20 +21,30 @@ aide jira create $ARGUMENTS
 
 ## Flags
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--project` | `-p` | Project key (required, e.g., PROJ) |
-| `--type` | `-t` | Issue type (required, e.g., Task, Bug, Story) |
-| `--summary` | `-s` | Issue summary/title (required) |
-| `--description` | `-d` | Description text in markdown format |
-| `--file` | `-f` | Read description from markdown file |
-| `--assignee` | `-a` | Assignee (email, account ID, or "me") |
-| `--priority` | | Priority name (e.g., High, Medium, Low) |
-| `--labels` | `-l` | Labels (comma-separated) |
-| `--component` | | Component name (can be repeated) |
-| `--parent` | | Parent issue key (for subtasks) |
-| `--field` | | Custom field (format: fieldName=value) |
-| `--format` | | Output format: text, json, markdown |
+| Flag            | Short | Description                                   |
+| --------------- | ----- | --------------------------------------------- |
+| `--project`     | `-p`  | Project key (required, e.g., PROJ)            |
+| `--type`        | `-t`  | Issue type (required, e.g., Task, Bug, Story) |
+| `--summary`     | `-s`  | Issue summary/title (required)                |
+| `--description` | `-d`  | Description text in markdown format           |
+| `--file`        | `-f`  | Read description from markdown file           |
+| `--assignee`    | `-a`  | Assignee (email, account ID, or "me")         |
+| `--priority`    |       | Priority name (e.g., High, Medium, Low)       |
+| `--labels`      | `-l`  | Labels (comma-separated)                      |
+| `--component`   |       | Component name (can be repeated)              |
+| `--parent`      |       | Parent issue key (for subtasks)               |
+| `--field`       |       | Custom field (see below for details)          |
+| `--format`      |       | Output format: text, json, markdown           |
+
+## Custom Fields
+
+The `--field` flag supports intelligent field handling:
+
+- **Name resolution**: Use human-readable names like `--field "Severity=High"` instead of `--field "customfield_10269=High"`
+- **Auto-formatting**: Values are automatically formatted based on field type (select fields, arrays, etc.)
+- **Validation**: Invalid values show helpful errors with the list of allowed values
+
+Use `/aide:ticket-fields PROJECT -t IssueType` to discover available fields and their allowed values.
 
 ## Output
 
@@ -63,4 +73,11 @@ aide jira create -p PROJ -t Sub-task -s "Write unit tests" --parent PROJ-100
 
 # Create with description from file
 aide jira create -p PROJ -t Task -s "New feature" --file ./description.md
+
+# Create with custom fields (use field name, auto-formatted)
+aide jira create -p PROJ -t Bug -s "Critical bug" --field "Severity=Critical" --field "Environment=Production"
 ```
+
+## Notes
+
+- **Description format**: Use Markdown - it's automatically converted to Jira format. If Jira wiki syntax is detected, a warning will suggest the Markdown equivalent.

@@ -10,7 +10,7 @@ The CLI follows a hierarchical command structure: `aide <service> <action> [opti
 
 **Services:**
 
-- `jira` - Jira ticket management (search, ticket, comment, comments, desc)
+- `jira` - Jira ticket management (search, view, create, update, transition, comment, comments, attach, fields)
 - `pr` - Pull request management (list, view, diff, create, update, comments, comment, reply)
 - `plugin` - Claude Code plugin management (install, status, uninstall)
 
@@ -112,8 +112,10 @@ src/
 commands/                 # Claude Code slash commands (for plugin)
   ticket.md               # /aide:ticket - Load Jira ticket context
   ticket-search.md        # /aide:ticket-search - Search Jira tickets
+  ticket-create.md        # /aide:ticket-create - Create a Jira ticket
+  ticket-update.md        # /aide:ticket-update - Update ticket fields
   ticket-comment.md       # /aide:ticket-comment - Add comment to ticket
-  ticket-update.md        # /aide:ticket-update - Update ticket description
+  ticket-fields.md        # /aide:ticket-fields - Discover available fields
   pr-view.md              # /aide:pr-view - View PR details
   pr-diff.md              # /aide:pr-diff - View PR diff and changed files
   pr-comments.md          # /aide:pr-comments - Get PR comments
@@ -244,6 +246,17 @@ Commands exit with status code 1 on errors and print user-friendly error message
 
 **Git Remote Detection:**
 PR commands use `spawnSync(['git', 'config', '--get', 'remote.origin.url'])` to detect repository context and auto-route to the appropriate platform (Azure DevOps, with GitHub support planned).
+
+**Custom Field Handling:**
+The `--field` flag on create/update commands supports:
+
+- **Name resolution**: Use human-readable field names (e.g., "Severity") instead of internal IDs (e.g., "customfield_10269")
+- **Auto-formatting**: Values are automatically formatted based on field type (select fields get `{value: "..."}`, etc.)
+- **Validation**: Invalid values show helpful error messages with the list of allowed values
+- **Discovery**: Use `aide jira fields PROJECT -t IssueType --show-values` to discover available fields
+
+**Description Format:**
+Descriptions should be written in Markdown format. The CLI automatically converts Markdown to Jira's Atlassian Document Format (ADF). If Jira wiki syntax is detected (e.g., `h2.`, `{code}`, `{{inline}}`), a warning is shown with conversion suggestions.
 
 ## Configuration Requirements
 

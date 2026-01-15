@@ -14,9 +14,10 @@ import {
   validateTicketKeyWithWarning,
   readContentFromFileOrArg,
   parseCommaSeparated,
-  parseCustomFields,
+  processCustomFields,
   formatSuccessMessage,
   logProgress,
+  warnIfJiraWikiSyntax,
 } from '@lib/jira-utils.js';
 import type { JiraUpdateIssueOptions } from '@lib/types.js';
 
@@ -71,7 +72,8 @@ async function handler(argv: ArgumentsCamelCase<UpdateArgs>): Promise<void> {
         args.file,
         'description'
       );
-      logProgress('Converting description to Jira format...', format);
+      warnIfJiraWikiSyntax(descriptionContent, format);
+      logProgress('Converting markdown to Jira format...', format);
       updateOptions.description = markdownToAdf(descriptionContent);
     }
 
@@ -146,9 +148,24 @@ async function handler(argv: ArgumentsCamelCase<UpdateArgs>): Promise<void> {
       updateOptions.components = args.component;
     }
 
-    // Handle custom fields
+    // Handle custom fields with name resolution, formatting, and validation
     if (args.field && args.field.length > 0) {
-      updateOptions.customFields = parseCustomFields(args.field);
+      // For updates, we need to get the issue type from the existing ticket
+      logProgress('Fetching ticket info for field resolution...', format);
+      const existingIssue = await client.getIssue(ticketKey);
+      const issueType = existingIssue.fields.issuetype.name;
+      const projectKey = existingIssue.fields.project.key;
+
+      const result = await processCustomFields(
+        client,
+        projectKey,
+        issueType,
+        args.field,
+        format
+      );
+      if (result) {
+        updateOptions.customFields = result.customFields;
+      }
     }
 
     logProgress('Updating ticket in Jira...', format);
@@ -193,7 +210,8 @@ export default {
     description: {
       type: 'string',
       alias: 'd',
-      describe: 'Update description (markdown format)',
+      describe:
+        'Update description in markdown (auto-converted to Jira format)',
     },
     file: {
       type: 'string',
@@ -230,7 +248,8 @@ export default {
     field: {
       type: 'string',
       array: true,
-      describe: 'Custom field (format: fieldName=value, can repeat)',
+      describe:
+        'Custom field (format: fieldName=value). Values are auto-formatted based on field type.',
     },
     format: {
       type: 'string',

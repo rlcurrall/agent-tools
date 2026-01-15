@@ -13,9 +13,10 @@ import { handleCommandError } from '@lib/errors.js';
 import {
   readContentFromFileOrArg,
   parseCommaSeparated,
-  parseCustomFields,
+  processCustomFields,
   formatSuccessMessage,
   logProgress,
+  warnIfJiraWikiSyntax,
 } from '@lib/jira-utils.js';
 import type { JiraCreateIssueOptions } from '@lib/types.js';
 
@@ -43,7 +44,8 @@ async function handler(argv: ArgumentsCamelCase<CreateArgs>): Promise<void> {
         args.file,
         'description'
       );
-      logProgress('Converting description to Jira format...', format);
+      warnIfJiraWikiSyntax(descriptionContent, format);
+      logProgress('Converting markdown to Jira format...', format);
       createOptions.description = markdownToAdf(descriptionContent);
     }
 
@@ -89,9 +91,18 @@ async function handler(argv: ArgumentsCamelCase<CreateArgs>): Promise<void> {
       createOptions.parent = args.parent;
     }
 
-    // Handle custom fields
+    // Handle custom fields with name resolution, formatting, and validation
     if (args.field && args.field.length > 0) {
-      createOptions.customFields = parseCustomFields(args.field);
+      const result = await processCustomFields(
+        client,
+        project,
+        type,
+        args.field,
+        format
+      );
+      if (result) {
+        createOptions.customFields = result.customFields;
+      }
     }
 
     logProgress('Creating ticket in Jira...', format);
@@ -143,7 +154,7 @@ export default {
     description: {
       type: 'string',
       alias: 'd',
-      describe: 'Description text in markdown format',
+      describe: 'Description in markdown (auto-converted to Jira format)',
     },
     file: {
       type: 'string',
@@ -176,7 +187,8 @@ export default {
     field: {
       type: 'string',
       array: true,
-      describe: 'Custom field (format: fieldName=value, can repeat)',
+      describe:
+        'Custom field (format: fieldName=value). Values are auto-formatted based on field type.',
     },
     format: {
       type: 'string',
