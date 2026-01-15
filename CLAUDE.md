@@ -109,22 +109,24 @@ src/
     comment-utils.ts      # Comment filtering utilities
     types.ts              # TypeScript interfaces
 
-commands/                 # Claude Code slash commands (for plugin)
-  ticket.md               # /aide:ticket - Load Jira ticket context
-  ticket-search.md        # /aide:ticket-search - Search Jira tickets
-  ticket-create.md        # /aide:ticket-create - Create a Jira ticket
-  ticket-update.md        # /aide:ticket-update - Update ticket fields
-  ticket-comment.md       # /aide:ticket-comment - Add comment to ticket
-  ticket-fields.md        # /aide:ticket-fields - Discover available fields
-  pr-view.md              # /aide:pr-view - View PR details
-  pr-diff.md              # /aide:pr-diff - View PR diff and changed files
-  pr-comments.md          # /aide:pr-comments - Get PR comments
-  pr-comment.md           # /aide:pr-comment - Post comment on PR
-  pr-create.md            # /aide:pr-create - Create a PR
-  pr-update.md            # /aide:pr-update - Update a PR
-  pr-reply.md             # /aide:pr-reply - Reply to PR thread
-
-skills/aide/SKILL.md      # Claude Code skill definition
+skills/                   # Claude Code skills (auto-discovered by Claude)
+  pr-view/SKILL.md        # View PR details
+  pr-diff/SKILL.md        # View PR diff and changed files
+  pr-create/SKILL.md      # Create a PR
+  pr-update/SKILL.md      # Update a PR
+  pr-comments/SKILL.md    # Get PR comments
+  pr-comment/SKILL.md     # Post comment on PR
+  pr-reply/SKILL.md       # Reply to PR thread
+  pr-list/SKILL.md        # List PRs
+  ticket/SKILL.md         # Load Jira ticket context
+  ticket-search/SKILL.md  # Search Jira tickets
+  ticket-create/SKILL.md  # Create a Jira ticket
+  ticket-update/SKILL.md  # Update ticket fields
+  ticket-comment/SKILL.md # Add comment to ticket
+  ticket-comments/SKILL.md # Get ticket comments
+  ticket-transition/SKILL.md # Change ticket status
+  ticket-fields/SKILL.md  # Discover available fields
+  ticket-attach/SKILL.md  # Manage attachments
 
 .claude-plugin/           # Claude Code plugin metadata
   plugin.json             # Plugin manifest
