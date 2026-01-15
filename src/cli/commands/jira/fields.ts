@@ -61,14 +61,16 @@ function getTypeDisplay(field: JiraFieldMeta): string {
  * Format allowed values for display
  */
 function formatAllowedValues(
-  values: Array<{ id: string; name: string; value?: string }> | undefined,
+  values: Array<{ id: string; name?: string; value?: string }> | undefined,
   maxValues: number
 ): string {
   if (!values || values.length === 0) {
     return '';
   }
 
-  const displayValues = values.map((v) => v.value || v.name);
+  const displayValues = values
+    .map((v) => v.value || v.name || v.id)
+    .filter(Boolean);
 
   if (displayValues.length <= maxValues) {
     return displayValues.join(', ');

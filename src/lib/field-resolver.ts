@@ -373,6 +373,8 @@ function findSimilarValues(
   for (const av of allowedValues) {
     // Check both name and value fields
     const displayValue = av.value || av.name;
+    if (!displayValue) continue; // Skip entries without a display value
+
     const displayLower = displayValue.toLowerCase();
     const distance = levenshteinDistance(valueLower, displayLower);
 
@@ -400,6 +402,17 @@ export function validateFieldValue(
     return { valid: true, normalizedValue: value };
   }
 
+  // Handle array values - validate each item
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const itemResult = validateFieldValue(field, item);
+      if (!itemResult.valid) {
+        return itemResult;
+      }
+    }
+    return { valid: true, normalizedValue: value };
+  }
+
   // For object values (already formatted), extract the comparison value
   let compareValue: string;
   if (typeof value === 'object' && value !== null) {
@@ -414,7 +427,7 @@ export function validateFieldValue(
   // Check for exact match (case-insensitive)
   for (const av of allowedValues) {
     if (
-      av.name.toLowerCase() === compareLower ||
+      (av.name && av.name.toLowerCase() === compareLower) ||
       (av.value && av.value.toLowerCase() === compareLower) ||
       av.id === compareValue
     ) {
@@ -440,7 +453,9 @@ export function formatAllowedValues(
   allowedValues: AllowedValue[],
   maxDisplay: number = 10
 ): string {
-  const values = allowedValues.map((av) => av.value || av.name);
+  const values = allowedValues
+    .map((av) => av.value || av.name || av.id)
+    .filter(Boolean);
 
   if (values.length <= maxDisplay) {
     return values.join(', ');

@@ -46,6 +46,51 @@ function isFormattedArray(value: unknown): boolean {
 }
 
 /**
+ * Detect the format style for allowed values
+ * Inspects the allowedValues to determine if the field expects:
+ * - 'name': Fields like components that use { name: "..." }
+ * - 'value': Fields like options that use { value: "..." }
+ * - 'id': Fields that require ID references
+ */
+function detectAllowedValueFormat(
+  allowedValues: AllowedValue[] | undefined
+): 'name' | 'value' | 'id' {
+  if (!allowedValues || allowedValues.length === 0) {
+    return 'value'; // Default fallback
+  }
+
+  // Sample the first few allowed values to detect the pattern
+  const sample = allowedValues.slice(0, 3);
+
+  // Check if values primarily use 'name' (like components)
+  // These typically have name but NOT value
+  const hasNameOnly = sample.some((av) => av.name && !av.value);
+  if (hasNameOnly) {
+    return 'name';
+  }
+
+  // Check if values primarily use 'value' (like options)
+  const hasValue = sample.some((av) => av.value);
+  if (hasValue) {
+    return 'value';
+  }
+
+  // Check if we only have IDs
+  const hasIdOnly = sample.every((av) => av.id && !av.name && !av.value);
+  if (hasIdOnly) {
+    return 'id';
+  }
+
+  // Default to name if we have names but couldn't determine otherwise
+  const hasName = sample.some((av) => av.name);
+  if (hasName) {
+    return 'name';
+  }
+
+  return 'value'; // Ultimate fallback
+}
+
+/**
  * Find matching allowed value (returns the actual value to use)
  */
 function findMatchingAllowedValue(
@@ -60,7 +105,7 @@ function findMatchingAllowedValue(
 
   for (const av of allowedValues) {
     if (
-      av.name.toLowerCase() === inputLower ||
+      (av.name && av.name.toLowerCase() === inputLower) ||
       (av.value && av.value.toLowerCase() === inputLower) ||
       av.id === input
     ) {
@@ -176,13 +221,36 @@ function formatArrayValue(
     };
   }
 
-  // Default array formatting with value objects
-  const formattedItems = items.map((item) => ({ value: item }));
+  // Determine the correct format by inspecting allowedValues structure
+  // Jira fields use different formats: { name }, { value }, { id }, etc.
+  // We detect this by checking what properties the allowedValues have
+  const formatStyle = detectAllowedValueFormat(allowedValues);
+
+  const formattedItems: Array<{ name: string } | { id: string } | { value: string }> = [];
+  const descriptions: string[] = [];
+
+  for (const item of items) {
+    const match = findMatchingAllowedValue(item, allowedValues);
+    if (formatStyle === 'name') {
+      const val = match?.name || item;
+      formattedItems.push({ name: val });
+      descriptions.push(`{"name": "${val}"}`);
+    } else if (formatStyle === 'id') {
+      const val = match?.id || item;
+      formattedItems.push({ id: val });
+      descriptions.push(`{"id": "${val}"}`);
+    } else {
+      const val = match?.value || match?.name || item;
+      formattedItems.push({ value: val });
+      descriptions.push(`{"value": "${val}"}`);
+    }
+  }
+
   return {
     success: true,
     formattedValue: formattedItems,
     originalValue: value,
-    formatDescription: `array of ${items.length} items`,
+    formatDescription: `[${descriptions.join(', ')}]`,
   };
 }
 

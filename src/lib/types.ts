@@ -76,7 +76,7 @@ export interface JiraIssueType {
  */
 export interface AllowedValue {
   id: string;
-  name: string;
+  name?: string;
   value?: string;
 }
 
